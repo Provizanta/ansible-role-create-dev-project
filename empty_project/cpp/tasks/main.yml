@@ -16,7 +16,7 @@
     path: "{{ project['path'] }}/{{ item.dest }}"
     state: directory
   when: item.use | default(True)
-  with_items:
+  loop:
     - { dest: "build" }
     - { dest: "include/{{ project['normalized_name'] }}" }
     - { dest: "src" }
@@ -30,7 +30,7 @@
 
 - name: establish project readme
   template:
-    src: "README.md"
+    src: "README.md.j2"
     dest: "{{ project['path'] }}/README.md"
 
 - name: establish project license

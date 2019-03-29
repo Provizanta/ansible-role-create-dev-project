@@ -1,7 +1,7 @@
 ---
 
 - set_fact:
-    corrected_name: "{{ project['name'] | replace(' ', '-') | lower }}"
+    corrected_name: "{{ project['name'] | replace(' ', '_') | lower }}"
 
 - set_fact:
     project:
@@ -12,7 +12,7 @@
   file:
     path: "{{ project['path'] }}/{{ item }}"
     state: directory
-  with_items:
+  loop:
     - ""
     - "{{ corrected_name }}"
     - "bin"
@@ -22,10 +22,10 @@
   template:
     src: "{{ item.src }}"
     dest: "{{ project['path'] }}/{{ item.dest }}"
-  with_items:
-    - { src: setup.py, dest: setup.py  }
-    - { src: empty.py, dest: "{{ corrected_name }}/__init__.py" }
-    - { src: README.md, dest: README.md }
+  loop:
+    - { src: setup.py.j2, dest: setup.py  }
+    - { src: empty.py.j2, dest: "{{ corrected_name }}/__init__.py" }
+    - { src: README.md.j2, dest: README.md }
 
 - name: add project license
   import_role:
