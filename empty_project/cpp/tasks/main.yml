@@ -2,8 +2,8 @@
 
 - name: establish updated facts
   set_fact:
-    project: 
-     "{{ project | combine(
+    project:
+      "{{ project | combine(
          {
            'owner': project['owner'] if project['owner'] is defined else project['author']['name'] if project.get('author',{}).get('name',{}) else '',
            'normalized_name': project['name'] | replace(' ', substitutes[' ']) | lower,
@@ -17,10 +17,10 @@
     state: directory
   when: item.use | default(True)
   loop:
-    - { dest: "build" }
-    - { dest: "include/{{ project['normalized_name'] }}" }
-    - { dest: "src" }
-    - { dest: "doc" }
+    - dest: "build"
+    - dest: "include/{{ project['normalized_name'] }}"
+    - dest: "src"
+    - dest: "doc"
 
 - import_tasks: tests.yml
   when: test is defined
