@@ -11,7 +11,7 @@
 - name: establish license dependency
   pip:
     name: lice
-    state: latest
+    state: present
 
 - block:
     - name: create project license

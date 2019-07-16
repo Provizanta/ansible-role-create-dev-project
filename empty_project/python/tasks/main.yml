@@ -1,9 +1,11 @@
 ---
 
-- set_fact:
+- name: prepare facts
+  set_fact:
     corrected_name: "{{ project['name'] | replace(' ', '_') | lower }}"
 
-- set_fact:
+- name: normalize input facts
+  set_fact:
     project:
       path: "{{ path }}/{{ corrected_name }}/"
       owner: "{{ project['owner'] if project['owner'] is defined else project['author']['name'] if project.get('author',{}).get('name',{}) else '' }}"
