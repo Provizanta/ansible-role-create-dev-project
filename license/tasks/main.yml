@@ -8,22 +8,30 @@
     path: "{{ project['path'] }}"
     state: directory
 
-- name: establish license dependency
+- name: check lice presence
+  command: lice
+  register: lice_package_present
+  changed_when: false
+  failed_when: false
+
+- name: establish license package
+  when: lice_package_present.rc != 0
+  become: true
   pip:
     name: lice
     state: present
 
 - block:
     - name: create project license
-      shell: lice {{ license | replace('-','') | lower }} -p "{{ project['name'] }}" {% if 'owner' in project %}-o "{{ project['owner'] }}"{% endif %} >| LICENSE
-      args:
-        chdir: '/tmp/'
+      command: "lice {{ license | replace('-','') | lower }} -p \"{{ project['name'] }}\"
+        {{ ('owner' in project) | ternary('-o \"' + project['owner'] + '\"','') }}"
+      register: project_license
       changed_when: false
 
     - name: update project license
       copy:
-        src: /tmp/LICENSE
-        dest: "{{ project['path'] }}"
+        content: "{{ project_license.stdout }}"
+        dest: "{{ project['path'] }}/LICENSE"
   when:
     - project is defined
     - project['name'] is defined

@@ -12,17 +12,17 @@
     build: "{{ build | lower if build is defined else None }}"
 
 - name: establish project skeleton
+  when: item.use | default(true)
   file:
     path: "{{ project['path'] }}/{{ item.dest }}"
     state: directory
-  when: item.use | default(True)
   loop:
     - dest: "build"
     - dest: "include/{{ project['normalized_name'] }}"
     - dest: "src"
     - dest: "doc"
     - dest: "test"
-      use: test.integration is defined
+      use: "{{ test.integration is defined }}"
 
 - include_tasks: tests/frameworks.yml
   when:
