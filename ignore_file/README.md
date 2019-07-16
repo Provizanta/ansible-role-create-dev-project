@@ -1,7 +1,7 @@
-Ignore files
+Ansible role: ignorefiles
 =========
 
-Create an ignore file for a programming project.
+Create an ignore file for a specific source control tool.
 
 Requirements
 ------------
@@ -11,9 +11,15 @@ None
 Role Variables
 --------------
 
-    path: path to the project directory
-    language: project programming language
-    ignore: list of elements to add to the default ignore file
+These variables are defined in default/main.yml
+
+    scm: git
+
+These variables must be specified by the user:
+
+    path:               # path to the project directory
+    language:           # project programming language
+    ignore: []          # list, lines to be added to the ignorefile
 
 Dependencies
 ------------
@@ -42,4 +48,4 @@ MIT
 Author Information
 ------------------
 
-Tibor Csoka
+Tibor Csóka
