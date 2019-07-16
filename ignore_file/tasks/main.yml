@@ -3,7 +3,7 @@
 - name: prepare facts
   set_fact:
     header: "## Project specific"
-    ignore_file: "{{ path }}/.{{ scm_to_short[scm] }}ignore" 
+    ignore_file: "{{ path }}/.{{ scm_to_short[scm] }}ignore"
 
 - name: establish ignore file
   get_url:
@@ -15,7 +15,7 @@
     line: "{{ header }}"
     path: "{{ ignore_file }}"
     state: present
-  check_mode: yes
+  check_mode: true
   register: _custom_header
 
 - name: establish project label
