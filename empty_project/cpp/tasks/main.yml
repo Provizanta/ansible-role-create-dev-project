@@ -7,7 +7,7 @@
          {
            'owner': project['owner'] if project['owner'] is defined else project['author']['name'] if project.get('author',{}).get('name',{}) else '',
            'normalized_name': project['name'] | replace(' ', substitutes[' ']) | lower,
-           'path': path + '/' + project['name'] | replace(' ', substitutes[' ']) | lower
+           'path': path + '/' + (project['name'] | replace(' ', substitutes[' ']) | lower)
          }, recursive=True) }}"
     build: "{{ build | lower if build is defined else None }}"
 
@@ -25,8 +25,7 @@
       use: "{{ test.integration is defined }}"
 
 - include_tasks: tests/frameworks.yml
-  when:
-    - test is defined
+  when: test is defined
 
 - include_tasks: build/cmake.yml
   when: build == 'cmake'
@@ -43,11 +42,10 @@
     license: "{{ project['license'] | default('wtfpl') }}"
 
 - name: establish ignore file
+  when: scm is defined
   import_role:
     name: "{{ role_path }}/../../ignore_file"
   vars:
     path: "{{ project['path'] }}"
     language: "C++"
     ignore: "{{ lookup('template', 'ignore_list.j2') }}"
-  when:
-    - scm is defined

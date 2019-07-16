@@ -1,5 +1,7 @@
 ---
 
+path: '.'       # path where the project root should reside
+
 project:
   license: "MIT"
   languages:

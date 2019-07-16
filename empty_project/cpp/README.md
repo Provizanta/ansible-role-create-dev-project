@@ -1,4 +1,4 @@
-Empty C++ project
+Ansible role: Empty C++ project
 =========
 
 Create an empty C++ project.
@@ -11,17 +11,30 @@ None
 Role Variables
 --------------
 
-    path: project destination path
-    
-    project:
-      name: project name
-      description: project description
-      author:
-        name: author's full name
-        email: e-mail contact
-      license: license, under which the project is licensed
+These variables are defined in the defaults/main.yml:
 
-    scm: source control mechanism
+    path: '.'       # path where the project root should reside
+
+    project:
+      license: "MIT"
+      languages:
+        - C
+        - CXX
+
+    platforms: []
+
+
+These variables can be further used to specify mode details:
+
+    project:
+      name:             # str, project name
+      description:      # str, project description
+      author:
+        name:           # str, author's full name
+        email:          # author's e-mail contact
+      license:          # enum, license, under which the project is licensed
+
+    scm:                # enum, git|mercurial, source control mechanism
 
 Dependencies
 ------------
@@ -31,11 +44,9 @@ None
 Example Playbook
 ----------------
 
-At least project name should be supplied.
-
     - hosts: localhost
       roles:
-         - role: dev/create/empty_project/cpp
+         - role: empty_project/cpp
            vars:
              path: "~/proj/system/"
              project:
@@ -52,4 +63,4 @@ MIT
 Author Information
 ------------------
 
-Tibor Csoka
+Tibor Csóka
