@@ -21,11 +21,14 @@
     - dest: "include/{{ project['normalized_name'] }}"
     - dest: "src"
     - dest: "doc"
+    - dest: "test"
+      use: test.integration is defined
 
-- import_tasks: tests.yml
-  when: test is defined
+- include_tasks: tests/frameworks.yml
+  when:
+    - test is defined
 
-- import_tasks: build/cmake.yml
+- include_tasks: build/cmake.yml
   when: build == 'cmake'
 
 - name: establish project readme
@@ -35,13 +38,13 @@
 
 - name: establish project license
   import_role:
-    name: dev/create/license
+    name: "{{ role_path }}/../../license"
   vars:
     license: "{{ project['license'] | default('wtfpl') }}"
 
 - name: establish ignore file
   import_role:
-    name: dev/create/ignore_file
+    name: "{{ role_path }}/../../ignore_file"
   vars:
     path: "{{ project['path'] }}"
     language: "C++"

@@ -11,4 +11,3 @@
     dest: "{{ item | dirname | regex_replace('.*templates/build/cmake', project['path']) }}"
   with_fileglob:
     - "templates/build/cmake/*"
-
