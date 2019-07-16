@@ -1,7 +1,7 @@
-Create license
+Ansible role: create reate license
 =========
 
-Create a license file for a programming project.
+Create a license file with a prefiled project information.
 
 Requirements
 ------------
@@ -11,12 +11,11 @@ None
 Role Variables
 --------------
 
-    license: license type
+    license:        # enum, license type
     project:
-      name: project name
-      path: path to the project directory
-      owner: project owner
-    
+      name:         # project name
+      path:         # project root path
+      owner:        # project owner
 
 Dependencies
 ------------
@@ -46,4 +45,4 @@ MIT
 Author Information
 ------------------
 
-Tibor Csoka
+Tibor Csóka
