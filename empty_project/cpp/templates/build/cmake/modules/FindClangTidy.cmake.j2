@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+
+# clang-tidy
+if(CMAKE_VERSION VERSION_GREATER 3.6)
+    option(CLANG_TIDY_FIX "Perform fixes for Clang-Tidy" OFF)
+    find_program(CLANG_TIDY_UTILITY_EXECUTABLE "clang-tidy")
+
+    if(CLANG_TIDY_UTILITY_EXECUTABLE)
+        if(CLANG_TIDY_FIX)
+            set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_UTILITY_EXECUTABLE}" "-fix")
+        else()
+            set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_UTILITY_EXECUTABLE}")
+        endif()
+    endif()
+endif()

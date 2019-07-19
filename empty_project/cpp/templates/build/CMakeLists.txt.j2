@@ -1,0 +1,104 @@
+# {{ ansible_managed }}
+
+{% set cmake_minimum_version = '3.12' -%}
+cmake_minimum_required(VERSION {{ cmake_minimum_version | default('3.13') }} FATAL_ERROR)
+
+# Summarize available features
+# https://cmake.org/cmake/help/v3.11/module/FeatureSummary.html
+include(FeatureSummary)
+
+# Use link optimization if available
+# https://cmake.org/cmake/help/v3.11/module/CheckIPOSupported.html
+include(CheckIPOSupported)
+check_ipo_supported(RESULT PROPERTY)
+if(ipo_supported)
+    set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
+{% if cmake_minimum_version is version('3.12', '<') -%}
+if(${CMAKE_VERSION} VERSION_LESS {{ CMAKE_VERSION }})
+    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+endif()
+{%- endif %}
+
+set(project_VERSION_MAJOR {{ (project['version'] | default('0.0.0')).split('.')[0] }})
+set(project_VERSION_MINOR {{ (project['version'] | default('0.0.0')).split('.')[1] }})
+set(project_VERSION_PATCH {{ (project['version'] | default('0.0.0')).split('.')[2] }})
+set(project_VERSION "${project_VERSION_MAJOR}.${project_VERSION_MINOR}.${project_VERSION_PATCH}")
+
+project("{{ project['name'] }}"
+        VERSION {{ project['version'] | default('${project_VERSION}') }}
+        {% if cmake_minimum_version is version('3.9', '>=') -%}DESCRIPTION "{{ project['description']['short'] | default('Project description should go here') }}"
+        {% endif -%}
+        {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ project['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
+        {%- endif %}
+
+)
+
+configure_file(ver.h.in ${PROJECT_BINARY_DIR}/ver.h)
+
+# explicit project-wide settings
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules
+                      ${CMAKE_MODULE_PATH})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/arch)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+{% for key, value in (project['settings'] | default({})).items() %}
+set({{ key }} {{ value }})
+{% endfor %}
+
+
+# Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or containing CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
+endif()
+
+# scm
+include(LoadSourceControl)
+
+# utilities
+find_package(Ccache)
+find_package(ClangTidy)
+find_package(CppCheck)
+
+set(CLANG_FORMAT_EXCLUDE_PATTERNS "build/" ${CMAKE_BINARY_DIR})
+find_package(ClangFormat)
+
+{% if tests | length > 0 %}
+# TESTING
+enable_testing()
+
+{% for i in tests if i in frameworks %}
+include({{ i }})
+{% endfor %}
+{% endif %}
+
+
+# BUILD
+# build type (defaults to "Release")
+if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
+    message("Setting build type to 'RelWithDebInfo' as none was specified.")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")     # for gui to recognize all options
+endif()
+
+include(project_targets)
+
+# INSTALL
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to ${CMAKE_BINARY_DIR}/install")
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE STRING "The path to use for install" FORCE)
+endif()
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/
+        DESTINATION bin)        # binaries
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/
+        DESTINATION lib)        # libraries
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION include)    # include
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/etc/
+        DESTINATION etc)        # other

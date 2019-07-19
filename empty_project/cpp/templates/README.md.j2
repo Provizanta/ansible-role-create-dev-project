@@ -1,11 +1,15 @@
 # {{ project['name'] }}
 
-{{ project['description'] if 'description' in project else '' }}
+{{ project['description']['short'] | default('') }}
+{% if 'description' in project and 'long' in project['description'] %}
+
+{{ project['description']['long'] }}
+{% endif %}
 
 ## License
 
-{{ project['license'] }}
+{{ project['license'] | mandatory }}
 
 ## Authors
 
-{{ project['owner'] if 'owner' in project else '' }}
+{{ project['owner'] | mandatory }}

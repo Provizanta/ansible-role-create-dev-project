@@ -1,13 +1,48 @@
 ---
 
-- name: establish cmake directory
+- name: establish CMake directory
   file:
-    path: "{{ project['path'] }}/cmake"
+    path: "{{ project['path'] }}/{{ item }}"
     state: directory
+    recurse: true
+  loop:
+    - cmake/modules
+    - cmake/scripts
+
+- name: touch target CMake file
+  file:
+    path: "{{ item }}"
+    state: touch
+  loop:
+    - "{{ project['path'] }}/cmake/modules/project_targets.cmake"
+
+- name: establish CMake module files
+  template:
+    src: "{{ item }}"
+    dest: "{{ project['path'] }}/cmake/modules/{{ (item | basename | splitext)[0] }}"
+  with_fileglob:
+    - "{{ role_path }}/templates/build/cmake/modules/*.j2"
+
+- name: establish CMake module files
+  template:
+    src: "{{ item }}"
+    dest: "{{ project['path'] }}/cmake/scripts/{{ item | basename }}"
+  with_fileglob:
+    - "{{ role_path }}/templates/build/cmake/scripts/*"
 
 - name: establish CMakeLists.txt files
   template:
-    src: "{{ item }}"
-    dest: "{{ item | dirname | regex_replace('.*templates/build/cmake', project['path']) }}"
-  with_fileglob:
-    - "templates/build/cmake/*"
+    src: "build/CMakeLists.txt.j2"
+    dest: "{{ project['path'] }}/CMakeLists.txt"
+
+- name: establish version file
+  copy:
+    content: |
+      #ifndef __VER_H__
+      #define __VER_H__
+
+      // version variable that will be substituted by cmake
+      const char* ver = "${project_VERSION}";
+
+      #endif
+    dest: "{{ project['path'] }}/ver.h.in"

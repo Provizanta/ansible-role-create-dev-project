@@ -1,4 +1,5 @@
 ---
+# vi: ft=ansible.yaml
 
 - name: establish updated facts
   set_fact:
@@ -6,10 +7,9 @@
       "{{ project | combine(
          {
            'owner': project['owner'] if project['owner'] is defined else project['author']['name'] if project.get('author',{}).get('name',{}) else '',
-           'normalized_name': project['name'] | replace(' ', substitutes[' ']) | lower,
-           'path': path + '/' + (project['name'] | replace(' ', substitutes[' ']) | lower)
+           'normalized_name': project['name'] | lower | replace(' ', substitutes[' ']) ,
+           'path': path + '/' + (project['name'] | lower | replace(' ', substitutes[' ']))
          }, recursive=True) }}"
-    build: "{{ build | lower if build is defined else None }}"
 
 - name: establish project skeleton
   when: item.use | default(true)
@@ -18,17 +18,15 @@
     state: directory
   loop:
     - dest: "build"
-    - dest: "include/{{ project['normalized_name'] }}"
+    - dest: "include"
     - dest: "src"
-    - dest: "doc"
-    - dest: "test"
-      use: "{{ test.integration is defined }}"
-
-- include_tasks: tests/frameworks.yml
-  when: test is defined
+    - dest: "lib"
+    - dest: "etc"
+    - dest: "docs"
+    - dest: "tests"
+      use: "{{ tests | length > 0 }}"
 
 - include_tasks: build/cmake.yml
-  when: build == 'cmake'
 
 - name: establish project readme
   template:
@@ -41,11 +39,24 @@
   vars:
     license: "{{ project['license'] | default('wtfpl') }}"
 
+- name: identify software version control in project directory
+  stat:
+    path: "{{ project['path'] }}/.git"
+  register: git_config
+
 - name: establish ignore file
-  when: scm is defined
+  when: git_config.stat.isdir is defined and git_config.stat.isdir
   import_role:
     name: "{{ role_path }}/../../ignore_file"
   vars:
     path: "{{ project['path'] }}"
     language: "C++"
-    ignore: "{{ lookup('template', 'ignore_list.j2') }}"
+    ignore:
+      - "build/"
+      - "lib/"
+
+- name: establish clang-format
+  when: format is defined
+  copy:
+    content: "{{ format }}"
+    dest: "{{ project['path'] }}/.clang-format"

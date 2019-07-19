@@ -1,7 +1,7 @@
 ---
 
 substitutes:
-  " ": "-"
+  " ": "_"
 
 frameworks:
   catch2:

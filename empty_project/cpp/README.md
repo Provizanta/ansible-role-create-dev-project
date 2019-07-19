@@ -3,6 +3,13 @@ Ansible role: Empty C++ project
 
 Create an empty C++ project.
 
+CMake files inspired by:
+  - https://github.com/ttroy50/cmake-examples
+  - https://github.com/sunsided/cmake/blob/master/CMakeLists.txt
+
+
+Special thanks to: tomas321
+
 Requirements
 ------------
 
@@ -18,23 +25,24 @@ These variables are defined in the defaults/main.yml:
     project:
       license: "MIT"
       languages:
-        - C
         - CXX
 
-    platforms: []
-
+    tests: []
 
 These variables can be further used to specify mode details:
 
     project:
       name:             # str, project name
-      description:      # str, project description
+      version:          # str, format: "major.minor.revision"
+      description:
+        short:          # str, short project description
+        long:           # str, long project description
       author:
         name:           # str, author's full name
         email:          # author's e-mail contact
-      license:          # enum, license, under which the project is licensed
+      settings:         # dict, key represents the setting name, value represents the value
 
-    scm:                # enum, git|mercurial, source control mechanism
+    format:       # str, clang format file content
 
 Dependencies
 ------------
@@ -46,14 +54,14 @@ Example Playbook
 
     - hosts: localhost
       roles:
-         - role: empty_project/cpp
-           vars:
-             path: "~/proj/system/"
-             project:
-               name: "Fantasy project name"
-               owner: "Fantasy Corp."
-               license: "BSD-3"
-             scm: "git"
+        - role: empty_project/cpp
+          vars:
+            path: "~/proj/system/"
+            project:
+              name: "Fantasy project name"
+              owner: "Fantasy Corp."
+              license: "BSD-3"
+            scm: "git"
 
 License
 -------
