@@ -1,20 +1,28 @@
 ---
 # vi: ft=ansible.yaml
 
-- name: establish updated facts
+- name: establish project facts
   set_fact:
     project:
-      "{{ project | combine(
-         {
-           'owner': project['owner'] if project['owner'] is defined else project['author']['name'] if project.get('author',{}).get('name',{}) else '',
-           'normalized_name': project['name'] | lower | replace(' ', substitutes[' ']) ,
-           'path': path + '/' + (project['name'] | lower | replace(' ', substitutes[' ']))
-         }, recursive=True) }}"
+      "{{ {
+           'version': '0.1.0',
+           'license': 'wtfpl',
+           'description': {
+             'short': '',
+             'long': ''
+           },
+         } | combine(project, recursive=True) }}"
+    build:
+      "{{ {
+           'languages': ['CXX'],
+           'settings': {}
+          } | combine(build | default({}), recursive=True) }}"
+    project_root_path: "{{ path + '/' + (project['name'] | lower | replace(' ', substitutes[' '])) }}"
 
 - name: establish project skeleton
   when: item.use | default(true)
   file:
-    path: "{{ project['path'] }}/{{ item.dest }}"
+    path: "{{ project_root_path }}/{{ item.dest }}"
     state: directory
   loop:
     - dest: "build"
@@ -31,17 +39,17 @@
 - name: establish project readme
   template:
     src: "README.md.j2"
-    dest: "{{ project['path'] }}/README.md"
+    dest: "{{ project_root_path }}/README.md"
 
 - name: establish project license
   import_role:
     name: "{{ role_path }}/../../license"
   vars:
-    license: "{{ project['license'] | default('wtfpl') }}"
+    license: "{{ project['license'] }}"
 
 - name: identify software version control in project directory
   stat:
-    path: "{{ project['path'] }}/.git"
+    path: "{{ project_root_path }}/.git"
   register: git_config
 
 - name: establish ignore file
@@ -49,14 +57,14 @@
   import_role:
     name: "{{ role_path }}/../../ignore_file"
   vars:
-    path: "{{ project['path'] }}"
+    path: "{{ project_root_path }}"
     language: "C++"
     ignore:
       - "build/"
       - "lib/"
 
 - name: establish clang-format
-  when: format is defined
+  when: build['format'] is defined
   copy:
-    content: "{{ format }}"
-    dest: "{{ project['path'] }}/.clang-format"
+    content: "{{ build['format'] }}"
+    dest: "{{ project_root_path }}/.clang-format"

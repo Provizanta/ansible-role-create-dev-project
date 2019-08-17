@@ -91,6 +91,4 @@ if(CPPCHECK_FOUND)
     add_custom_target(cppcheck-analysis
         COMMAND ${CPPCHECK_COMMAND})
     message("cppcheck found. Use 'cppcheck-analysis' targets to run it")
-else()
-    message("cppcheck not found. No 'cppcheck-analysis' targets")
 endif()

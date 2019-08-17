@@ -23,11 +23,8 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(
     DEFAULT_MSG
     CLANG_FORMAT_UTILITY_EXECUTABLE)
 
-mark_as_advanced(
-    CLANG_FORMAT_UTILITY_EXECUTABLE)
+mark_as_advanced(CLANG_FORMAT_UTILITY_EXECUTABLE)
 
 if(CLANG_FORMAT_FOUND)
-	include(clang-format)
-else()
-    message("clang-format not found. Skipping all format targets")
+    include(clang-format)
 endif()

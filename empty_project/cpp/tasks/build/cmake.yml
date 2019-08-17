@@ -2,47 +2,80 @@
 
 - name: establish CMake directory
   file:
-    path: "{{ project['path'] }}/{{ item }}"
+    path: "{{ project_root_path }}/{{ item }}"
     state: directory
     recurse: true
   loop:
     - cmake/modules
     - cmake/scripts
 
+- name: check project cmake file presence
+  stat:
+    path: "{{ project_root_path }}/cmake/modules/project_targets.cmake"
+  register: project_target_cmake_file
+
 - name: touch target CMake file
+  when: not project_target_cmake_file.stat.exists
   file:
-    path: "{{ item }}"
+    path: "{{ project_root_path }}/cmake/modules/project_targets.cmake"
     state: touch
-  loop:
-    - "{{ project['path'] }}/cmake/modules/project_targets.cmake"
+
+- name: create a version file
+  lineinfile:
+    line: "{{ project['version'] }}"
+    dest: "{{ project_root_path }}/VERSION"
+    create: true
 
 - name: establish CMake module files
   template:
     src: "{{ item }}"
-    dest: "{{ project['path'] }}/cmake/modules/{{ (item | basename | splitext)[0] }}"
+    dest: "{{ project_root_path }}/cmake/modules/{{ (item | basename | splitext)[0] }}"
   with_fileglob:
     - "{{ role_path }}/templates/build/cmake/modules/*.j2"
 
-- name: establish CMake module files
+- name: establish CMake script files
   template:
     src: "{{ item }}"
-    dest: "{{ project['path'] }}/cmake/scripts/{{ item | basename }}"
+    dest: "{{ project_root_path }}/cmake/scripts/{{ item | basename }}"
   with_fileglob:
     - "{{ role_path }}/templates/build/cmake/scripts/*"
 
-- name: establish CMakeLists.txt files
+- name: establish test module CMake files
+  template:
+    src: "build/cmake/test/{{ item }}.cmake.j2"
+    dest: "{{ project_root_path }}/cmake/modules/{{ item }}.cmake"
+  loop: "{{ tests }}"
+
+- name: establish global CMakeLists.txt
   template:
     src: "build/CMakeLists.txt.j2"
-    dest: "{{ project['path'] }}/CMakeLists.txt"
+    dest: "{{ project_root_path }}/CMakeLists.txt"
+
+- name: establish docs CMakeLists.txt
+  template:
+    src: "build/docs_CMakeLists.txt.j2"
+    dest: "{{ project_root_path }}/docs/CMakeLists.txt"
+
+- name: check version file presence
+  stat:
+    path: "{{ project_root_path }}/VERSION"
+  register: version_file
+
+- name: create a version file
+  when: not version_file.stat.exists
+  lineinfile:
+    line: "{{ project['version'] }}"
+    dest: "{{ project_root_path }}/VERSION"
+    create: true
 
 - name: establish version file
   copy:
     content: |
-      #ifndef __VER_H__
-      #define __VER_H__
+      #ifndef __VERSION_H__
+      #define __VERSION_H__
 
       // version variable that will be substituted by cmake
       const char* ver = "${project_VERSION}";
 
-      #endif
-    dest: "{{ project['path'] }}/ver.h.in"
+      #endif	// __VERSION_H__
+    dest: "{{ project_root_path }}/version.h.in"

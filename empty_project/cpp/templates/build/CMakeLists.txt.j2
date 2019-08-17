@@ -21,21 +21,23 @@ if(${CMAKE_VERSION} VERSION_LESS {{ CMAKE_VERSION }})
 endif()
 {%- endif %}
 
-set(project_VERSION_MAJOR {{ (project['version'] | default('0.0.0')).split('.')[0] }})
-set(project_VERSION_MINOR {{ (project['version'] | default('0.0.0')).split('.')[1] }})
-set(project_VERSION_PATCH {{ (project['version'] | default('0.0.0')).split('.')[2] }})
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" READ_VERSION)
+string(REGEX MATCH "([0-9]*).([0-9]*).([0-9]*)" _ ${READ_VERSION})
+set(project_VERSION_MAJOR ${CMAKE_MATCH_1})
+set(project_VERSION_MINOR ${CMAKE_MATCH_2})
+set(project_VERSION_PATCH ${CMAKE_MATCH_3})
 set(project_VERSION "${project_VERSION_MAJOR}.${project_VERSION_MINOR}.${project_VERSION_PATCH}")
 
 project("{{ project['name'] }}"
-        VERSION {{ project['version'] | default('${project_VERSION}') }}
+        VERSION ${project_VERSION}
         {% if cmake_minimum_version is version('3.9', '>=') -%}DESCRIPTION "{{ project['description']['short'] | default('Project description should go here') }}"
         {% endif -%}
-        {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ project['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
+        {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ build['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
         {%- endif %}
 
 )
 
-configure_file(ver.h.in ${PROJECT_BINARY_DIR}/ver.h)
+configure_file(version.h.in ${PROJECT_BINARY_DIR}/include/version.h)
 
 # explicit project-wide settings
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules
@@ -43,7 +45,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/arch)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-{% for key, value in (project['settings'] | default({})).items() %}
+{% for key, value in (build['settings'] | default({})).items() %}
 set({{ key }} {{ value }})
 {% endfor %}
 
@@ -102,3 +104,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/etc/
         DESTINATION etc)        # other
+
+# docs
+add_subdirectory ("docs")

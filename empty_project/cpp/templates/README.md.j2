@@ -1,15 +1,18 @@
 # {{ project['name'] }}
 
 {{ project['description']['short'] | default('') }}
-{% if 'description' in project and 'long' in project['description'] %}
 
+{% if project['description']['long'] is defined %}
 {{ project['description']['long'] }}
 {% endif %}
 
-## License
+# License
 
-{{ project['license'] | mandatory }}
+{{ project['license' ]}}
 
-## Authors
-
-{{ project['owner'] | mandatory }}
+{% if 'authors' in project -%}
+# Authors
+{% for author in project['authors'] %}
+{{ author['name'] | default(author) }}{% if author['email'] is defined and author['email'] != '' %}{{ ', ' + author['email'] }}{% endif %}
+{% endfor %}
+{% endif %}

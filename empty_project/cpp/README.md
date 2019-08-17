@@ -6,9 +6,9 @@ Create an empty C++ project.
 CMake files inspired by:
   - https://github.com/ttroy50/cmake-examples
   - https://github.com/sunsided/cmake/blob/master/CMakeLists.txt
+  - [docs using Sphinx and Doxygen](https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/)
 
-
-Special thanks to: tomas321
+Special thanks to: [tomas321](https://github.com/tomas321)
 
 Requirements
 ------------
@@ -22,12 +22,7 @@ These variables are defined in the defaults/main.yml:
 
     path: '.'       # path where the project root should reside
 
-    project:
-      license: "MIT"
-      languages:
-        - CXX
-
-    tests: []
+    tests: []       # list of test frameworks, catch2|googletest
 
 These variables can be further used to specify mode details:
 
@@ -37,12 +32,15 @@ These variables can be further used to specify mode details:
       description:
         short:          # str, short project description
         long:           # str, long project description
-      author:
-        name:           # str, author's full name
-        email:          # author's e-mail contact
-      settings:         # dict, key represents the setting name, value represents the value
+      authors:
+        - name:         # str, author's full name
+          email:        # str, author's e-mail contact
 
-    format:       # str, clang format file content
+    build:
+      settings:         # dict, key represents the setting name, value represents the value
+      format:           # str, clang format file content
+      languages:        # list of languages to compile, C|CXX|CUDA|FORTRAN
+      
 
 Dependencies
 ------------
@@ -59,9 +57,11 @@ Example Playbook
             path: "~/proj/system/"
             project:
               name: "Fantasy project name"
-              owner: "Fantasy Corp."
+              authors:
+                - "Fantasy Corp."
+                - name: Mark Jones
+                  email: mark@jones.com
               license: "BSD-3"
-            scm: "git"
 
 License
 -------

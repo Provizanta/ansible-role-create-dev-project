@@ -2,9 +2,4 @@
 
 path: '.'       # path where the project root should reside
 
-project:
-  license: "MIT"
-  languages:
-    - CXX
-
-tests: []
+tests: []       # list of test frameworks, catch2|googletest
