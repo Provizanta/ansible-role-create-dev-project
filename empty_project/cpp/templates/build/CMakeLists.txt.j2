@@ -37,7 +37,7 @@ project("{{ project['name'] }}"
 
 )
 
-configure_file(version.h.in ${PROJECT_BINARY_DIR}/include/version.h)
+configure_file(version.h.in ${PROJECT_SOURCE_DIR}/include/version.h)
 
 # explicit project-wide settings
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules
@@ -78,7 +78,6 @@ enable_testing()
 include({{ i }})
 {% endfor %}
 {% endif %}
-
 
 # BUILD
 # build type (defaults to "Release")
