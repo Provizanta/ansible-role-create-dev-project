@@ -40,7 +40,7 @@ These variables can be further used to specify mode details:
       settings:         # dict, key represents the setting name, value represents the value
       format:           # str, clang format file content
       languages:        # list of languages to compile, C|CXX|CUDA|FORTRAN
-      
+
 
 Dependencies
 ------------

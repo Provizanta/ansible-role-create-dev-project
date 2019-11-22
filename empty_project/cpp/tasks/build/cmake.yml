@@ -26,24 +26,37 @@
     dest: "{{ project_root_path }}/VERSION"
     create: true
 
-- name: establish CMake module files
+- name: establish standard CMake module files
   template:
     src: "{{ item }}"
     dest: "{{ project_root_path }}/cmake/modules/{{ (item | basename | splitext)[0] }}"
   with_fileglob:
     - "{{ role_path }}/templates/build/cmake/modules/*.j2"
 
-- name: establish CMake script files
+- name: establish optional CMake module files
+  when: item['use'] | default(true)
   template:
-    src: "{{ item }}"
-    dest: "{{ project_root_path }}/cmake/scripts/{{ item | basename }}"
-  with_fileglob:
-    - "{{ role_path }}/templates/build/cmake/scripts/*"
+    src: "build/cmake/optional_modules/{{ item }}"
+    dest: "{{ project_root_path }}/cmake/modules/{{ (item | basename | splitext)[0] }}"
+  loop:
+    - file: "clang-format.cmake.j2"
+      use: "{{ build['format'] is defined }}"
+    - file: "FindClangFormat.cmake.j2"
+      use: "{{ build['format'] is defined }}"
 
-- name: establish test module CMake files
+- name: establish CMake script files
+  when: item['use'] | default(true)
   template:
-    src: "build/cmake/test/{{ item }}.cmake.j2"
-    dest: "{{ project_root_path }}/cmake/modules/{{ item }}.cmake"
+    src: "{{ role_path }}/templates/build/cmake/optional_scripts/{{ item['file'] }}"
+    dest: "{{ project_root_path }}/cmake/scripts/{{ item['file'] | basename }}"
+  loop:
+    - file: "clang-format-check-changed.py"
+      use: "{{ build['format'] is defined }}"
+
+- name: establish test CMake module files
+  template:
+    src: "build/cmake/test/{{ item | lower }}.cmake.j2"
+    dest: "{{ project_root_path }}/cmake/modules/{{ item | lower }}.cmake"
   loop: "{{ tests }}"
 
 - name: establish global CMakeLists.txt

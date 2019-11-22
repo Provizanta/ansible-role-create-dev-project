@@ -64,8 +64,11 @@ find_package(Ccache)
 find_package(ClangTidy)
 find_package(CppCheck)
 
+{% if build['format'] is defined %}
+# format
 set(CLANG_FORMAT_EXCLUDE_PATTERNS "build/" ${CMAKE_BINARY_DIR})
 find_package(ClangFormat)
+{% endif %}
 
 {% if tests | length > 0 %}
 # TESTING
