@@ -90,5 +90,5 @@ if(CPPCHECK_FOUND)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/analysis/cppcheck)
     add_custom_target(cppcheck-analysis
         COMMAND ${CPPCHECK_COMMAND})
-    message("cppcheck found. Use 'cppcheck-analysis' targets to run it")
+    message(STATUS "cppcheck found. Use 'cppcheck-analysis' targets to run it")
 endif()

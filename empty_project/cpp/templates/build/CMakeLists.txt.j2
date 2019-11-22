@@ -82,7 +82,7 @@ include({{ i }})
 # BUILD
 # build type (defaults to "Release")
 if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
-    message("Setting build type to 'RelWithDebInfo' as none was specified.")
+    message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")     # for gui to recognize all options
 endif()
