@@ -38,11 +38,14 @@ if(CPPCHECK_UTILITY_EXECUTABLE)
                   ERROR_QUIET
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    set(CPPCHECK_THREADS_ARG "-j4" CACHE STRING "The number of threads to use")
-    set(CPPCHECK_PROJECT_ARG "--project=${PROJECT_BINARY_DIR}/compile_commands.json")
-    set(CPPCHECK_BUILD_DIR_ARG "--cppcheck-build-dir=${PROJECT_BINARY_DIR}/analysis/cppcheck" CACHE STRING "The build directory to use")
-    if(EXISTS "${CMAKE_SOURCE_DIR}/.cppcheck_suppressions")
-        set(CPPCHECK_SUPPRESSIONS "--suppressions-list=${CMAKE_SOURCE_DIR}/.cppcheck_suppressions" CACHE STRING "The suppressions file to use")
+    set(CPPCHECK_THREADS_ARG "-j8" CACHE STRING "The number of threads to use")
+    if(EXISTS "--project=${project_BINARY_DIR}/compile_commands.json")
+        set(CPPCHECK_BUILD_DIR_ARG "--project=${project_BINARY_DIR}/compile_commands.json" CACHE STRING "The build directory to use")
+    else()
+        set(CPPCHECK_BUILD_DIR_ARG "" CACHE STRING "The build directory to use")
+    endif()
+    if(EXISTS "${PROJECT_SOURCE_DIR}/.cppcheck_suppressions")
+        set(CPPCHECK_SUPPRESSIONS "--suppressions-list=${PROJECT_SOURCE_DIR}/.cppcheck_suppressions" CACHE STRING "The suppressions file to use")
     else()
         set(CPPCHECK_SUPPRESSIONS "" CACHE STRING "The suppressions file to use")
     endif()
@@ -64,15 +67,10 @@ if(CPPCHECK_UTILITY_EXECUTABLE)
         ${CPPCHECK_UTILITY_EXECUTABLE}
         ${CPPCHECK_ALL_ARGS}
     )
-
-    #TODO add version check on the binary
 endif()
 
-
-# handle the QUIETLY and REQUIRED arguments and set YAMLCPP_FOUND to TRUE if all listed variables are TRUE
-include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(
-    CPPCHECK
+    CppCheck
     DEFAULT_MSG
     CPPCHECK_UTILITY_EXECUTABLE)
 
@@ -84,11 +82,15 @@ mark_as_advanced(
     CPPCHECK_ERROR_EXITCODE_ARG
     CPPCHECK_SUPPRESSIONS
     CPPCHECK_CHECKS_ARGS
-    CPPCHECK_OTHER_ARGS)
+    CPPCHECK_OTHER_ARGS
+)
 
 if(CPPCHECK_FOUND)
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/analysis/cppcheck)
-    add_custom_target(cppcheck-analysis
-        COMMAND ${CPPCHECK_COMMAND})
-    message(STATUS "cppcheck found. Use 'cppcheck-analysis' targets to run it")
+    file(MAKE_DIRECTORY ${project_BINARY_DIR}/analysis/cppcheck)
+    add_custom_target(static-analysis-cppcheck COMMAND ${CPPCHECK_COMMAND})
+    message(STATUS "Found CppCheck: use 'static-analysis-cppcheck' target with CMAKE_EXPORT_COMPILE_COMMANDS=ON to run it")
+
+    if(CMAKE_VERSION VERSION_GREATER 3.6)
+        set(CMAKE_CXX_CPPCHECK "${CPPCHECK_COMMAND}")
+    endif()
 endif()

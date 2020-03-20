@@ -3,7 +3,8 @@
 # clang-tidy
 if(CMAKE_VERSION VERSION_GREATER 3.6)
     option(CLANG_TIDY_FIX "Perform fixes for Clang-Tidy" OFF)
-    find_program(CLANG_TIDY_UTILITY_EXECUTABLE "clang-tidy")
+    find_program(CLANG_TIDY_UTILITY_EXECUTABLE
+                 NAMES "clang-tidy" "clang-tidy-10" "clang-tidy-9" "clang-tidy-8" "clang-tidy-7" "clang-tidy-6")
 
     if(CLANG_TIDY_UTILITY_EXECUTABLE)
         if(CLANG_TIDY_FIX)

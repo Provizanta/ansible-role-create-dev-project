@@ -10,6 +10,14 @@ CMake files inspired by:
 
 Special thanks to: [tomas321](https://github.com/tomas321)
 
+To incorporate:
+* cpplint
+  * `cmake "-DCMAKE_CXX_CPPLINT=/usr/local/bin/cpplint;--linelength=79" ..`
+* IWYU
+  * `cmake "-DCMAKE_CXX_INCLUDE_WHAT_YOU_USE=/usr/bin/iwyu;--transitive_includes_only" ..`
+* LWYU
+  * `cmake -DCMAKE_LINK_WHAT_YOU_USE=TRUE ..`
+
 Requirements
 ------------
 
@@ -35,12 +43,15 @@ These variables can be further used to specify mode details:
       authors:
         - name:         # str, author's full name
           email:        # str, author's e-mail contact
+      attributes:
+        header_only:    # bool, is the project header-only
 
     build:
       settings:         # dict, key represents the setting name, value represents the value
       format:           # str, clang format file content
-      languages:        # list of languages to compile, C|CXX|CUDA|FORTRAN
-
+      languages:        # list, languages to compile (C|CXX|CUDA|FORTRAN)
+      preferences:
+        use_build_type_subdir:      # bool, divide the build into build type subdirs
 
 Dependencies
 ------------

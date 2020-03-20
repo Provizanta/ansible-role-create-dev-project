@@ -1,6 +1,11 @@
 ---
 
-- name: establish CMake directory
+- name: establish global CMakeLists.txt
+  template:
+    src: "build/CMakeLists.txt.j2"
+    dest: "{{ project_root_path }}/CMakeLists.txt"
+
+- name: establish CMake module directory
   file:
     path: "{{ project_root_path }}/{{ item }}"
     state: directory
@@ -9,22 +14,19 @@
     - cmake/modules
     - cmake/scripts
 
-- name: check project cmake file presence
-  stat:
-    path: "{{ project_root_path }}/cmake/modules/project_targets.cmake"
-  register: project_target_cmake_file
+- name: handle non-header-only project source
+  when: not project['attributes']['header_only']
+  block:
+    - name: check src/ CMakeLists.txt file presence
+      stat:
+        path: "{{ project_root_path }}/src/CMakeLists.txt"
+      register: project_target_cmake_file
 
-- name: touch target CMake file
-  when: not project_target_cmake_file.stat.exists
-  file:
-    path: "{{ project_root_path }}/cmake/modules/project_targets.cmake"
-    state: touch
-
-- name: create a version file
-  lineinfile:
-    line: "{{ project['version'] }}"
-    dest: "{{ project_root_path }}/VERSION"
-    create: true
+    - name: touch src/ CMakeLists.txt file presence
+      when: not project_target_cmake_file.stat.exists
+      file:
+        path: "{{ project_root_path }}/src/CMakeLists.txt"
+        state: touch
 
 - name: establish standard CMake module files
   template:
@@ -58,11 +60,6 @@
     src: "build/cmake/test/{{ item | lower }}.cmake.j2"
     dest: "{{ project_root_path }}/cmake/modules/{{ item | lower }}.cmake"
   loop: "{{ tests }}"
-
-- name: establish global CMakeLists.txt
-  template:
-    src: "build/CMakeLists.txt.j2"
-    dest: "{{ project_root_path }}/CMakeLists.txt"
 
 - name: establish docs CMakeLists.txt
   template:

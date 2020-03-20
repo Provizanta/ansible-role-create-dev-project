@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
 
-{% set cmake_minimum_version = '3.12' -%}
+{% set cmake_minimum_version = '3.15' -%}
 cmake_minimum_required(VERSION {{ cmake_minimum_version | default('3.13') }} FATAL_ERROR)
 
 # Summarize available features
@@ -15,7 +15,7 @@ if(ipo_supported)
     set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-{% if cmake_minimum_version is version('3.12', '<') -%}
+{% if cmake_minimum_version is version('3.12', '<') and cmake_minimum_version is version('3.5', '>') -%}
 if(${CMAKE_VERSION} VERSION_LESS {{ CMAKE_VERSION }})
     cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
 endif()
@@ -29,22 +29,34 @@ set(project_VERSION_PATCH ${CMAKE_MATCH_3})
 set(project_VERSION "${project_VERSION_MAJOR}.${project_VERSION_MINOR}.${project_VERSION_PATCH}")
 
 project("{{ project['name'] }}"
-        VERSION ${project_VERSION}
-        {% if cmake_minimum_version is version('3.9', '>=') -%}DESCRIPTION "{{ project['description']['short'] | default('Project description should go here') }}"
-        {% endif -%}
-        {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ build['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
-        {%- endif %}
-
+    VERSION ${project_VERSION}
+    {% if cmake_minimum_version is version('3.9', '>=') and project['description']['short'] is defined -%}DESCRIPTION "{{ project['description']['short'] }}"
+    {% endif -%}
+    {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ build['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
+    {%- endif %}
 )
 
 configure_file(version.h.in ${PROJECT_SOURCE_DIR}/include/version.h)
 
+
+# set default build type
+if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
+    message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the build type." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")     # for gui
+endif()
+
+
 # explicit project-wide settings
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules
                       ${CMAKE_MODULE_PATH})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/arch)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+set(project_BINARY_DIR ${CMAKE_BINARY_DIR}/{% if build['preferences']['use_build_type_subdir'] %}${CMAKE_BUILD_TYPE}{% endif %})
+set(external_project_SOURCE_DIR ${PROJECT_SOURCE_DIR}/external)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${project_BINARY_DIR}/arch)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${project_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${project_BINARY_DIR}/bin)
 {% for key, value in (build['settings'] | default({})).items() %}
 set({{ key }} {{ value }})
 {% endfor %}
@@ -66,7 +78,7 @@ find_package(CppCheck)
 
 {% if build['format'] is defined %}
 # format
-set(CLANG_FORMAT_EXCLUDE_PATTERNS "build/" ${CMAKE_BINARY_DIR})
+set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" ${CMAKE_BINARY_DIR})
 find_package(ClangFormat)
 {% endif %}
 
@@ -79,33 +91,36 @@ include({{ i }})
 {% endfor %}
 {% endif %}
 
-# BUILD
-# build type (defaults to "Release")
-if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
-    message(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")     # for gui to recognize all options
-endif()
 
-include(project_targets)
+# BUILD TARGETS
+{% if project['attributes']['header_only'] %}
+include(include)
+{% else %}
+add_subdirectory(src)
+{% endif %}
 
 # INSTALL
+{#-
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to ${CMAKE_BINARY_DIR}/install")
-    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE STRING "The path to use for install" FORCE)
+    message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to ${project_BINARY_DIR}/install")
+    set(CMAKE_INSTALL_PREFIX "${project_BINARY_DIR}/install" CACHE STRING "The path to use for install" FORCE)
 endif()
+#}
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/
+{% if not project['attributes']['header_only'] %}
+install(DIRECTORY ${project_BINARY_DIR}/bin/
         DESTINATION bin)        # binaries
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/
+install(DIRECTORY ${project_BINARY_DIR}/lib/
         DESTINATION lib)        # libraries
+{% endif %}
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
         DESTINATION include)    # include
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/etc/
         DESTINATION etc)        # other
 
-# docs
-add_subdirectory ("docs")
+
+# DOCS
+add_subdirectory("docs")

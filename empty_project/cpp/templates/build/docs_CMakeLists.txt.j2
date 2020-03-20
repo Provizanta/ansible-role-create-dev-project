@@ -5,19 +5,21 @@ find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
 if(DOXYGEN_FOUND)
     # file(GLOB_RECURSE THIS_PROJECT_PUBLIC_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 
-    set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs)
+    set(DOXYGEN_OUTPUT_DIRECTORY {{ build['preferences']['use_build_type_subdir'] | ternary('${project_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}') }}/doxygen)
     doxygen_add_docs("docs-doxygen"
-        src/ include/
+        ${PROJECT_SOURCE_DIR}/src/
+        ${PROJECT_SOURCE_DIR}/include/
         COMMENT "Generating documentation using doxygen"
     )
 
     set(DOC_TARGETS_IDENTIFIED docs-doxygen)
 
+{#
 #   Needed a better integration with Sphinx: https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/
 #    find_package(Sphinx)
 #    if(SPHINX_UTILITY_EXECUTABLE)
 #        set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
-#        set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/docs/sphinx)
+#        set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
 #
 #        add_custom_target(docs-sphinx
 #                          COMMAND ${SPHINX_EXECUTABLE} -b html ${SPHINX_SOURCE} ${SPHINX_BUILD}
@@ -25,7 +27,7 @@ if(DOXYGEN_FOUND)
 #                          COMMENT "Generating documentation with Sphinx")
 #        set(DOC_TARGETS_IDENTIFIED ${DOC_TARGETS_IDENTIFIED} "docs-sphinx")
 #    endif()
-
+#}
     add_custom_target(docs ALL
                       DEPENDS ${DOC_TARGETS_IDENTIFIED}
                       COMMENT "Generating the entire project documentation")
