@@ -2,7 +2,7 @@
 
 - name: establish global CMakeLists.txt
   template:
-    src: "build/CMakeLists.txt.j2"
+    src: "cmake/CMakeLists.txt.j2"
     dest: "{{ project_root_path }}/CMakeLists.txt"
 
 - name: establish CMake module directory
@@ -33,37 +33,37 @@
     src: "{{ item }}"
     dest: "{{ project_root_path }}/cmake/modules/{{ (item | basename | splitext)[0] }}"
   with_fileglob:
-    - "{{ role_path }}/templates/build/cmake/modules/*.j2"
+    - "{{ role_path }}/templates/cmake/modules/*.j2"
 
 - name: establish optional CMake module files
   when: item['use'] | default(true)
   template:
-    src: "build/cmake/optional_modules/{{ item }}"
-    dest: "{{ project_root_path }}/cmake/modules/{{ (item | basename | splitext)[0] }}"
+    src: "cmake/optional_modules/{{ item['file'] }}"
+    dest: "{{ project_root_path }}/cmake/modules/{{ (item['file'] | basename | splitext)[0] }}"
   loop:
     - file: "clang-format.cmake.j2"
-      use: "{{ build['format'] is defined }}"
+      use: "{{ format is defined }}"
     - file: "FindClangFormat.cmake.j2"
-      use: "{{ build['format'] is defined }}"
+      use: "{{ format is defined }}"
 
 - name: establish CMake script files
   when: item['use'] | default(true)
   template:
-    src: "{{ role_path }}/templates/build/cmake/optional_scripts/{{ item['file'] }}"
+    src: "{{ role_path }}/templates/cmake/optional_scripts/{{ item['file'] }}"
     dest: "{{ project_root_path }}/cmake/scripts/{{ item['file'] | basename }}"
   loop:
     - file: "clang-format-check-changed.py"
-      use: "{{ build['format'] is defined }}"
+      use: "{{ format is defined }}"
 
 - name: establish test CMake module files
   template:
-    src: "build/cmake/test/{{ item | lower }}.cmake.j2"
+    src: "cmake/test/{{ item | lower }}.cmake.j2"
     dest: "{{ project_root_path }}/cmake/modules/{{ item | lower }}.cmake"
   loop: "{{ tests }}"
 
 - name: establish docs CMakeLists.txt
   template:
-    src: "build/docs_CMakeLists.txt.j2"
+    src: "cmake/docs_CMakeLists.txt.j2"
     dest: "{{ project_root_path }}/docs/CMakeLists.txt"
 
 - name: check version file presence

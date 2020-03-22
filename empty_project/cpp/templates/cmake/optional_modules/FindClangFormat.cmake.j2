@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+
+# clang-format
+set(CLANG_FORMAT_BIN "clang-format" "clang-format-10" "clang-format-9" "clang-format-8" "clang-format-7" "clang-format-6" CACHE STRING "Clang-format binary name or path to the desired binary")
+
+{% set PROJECT_NAME = (project_root_path | basename) -%}
+option({{ PROJECT_NAME | upper }}_ALLOW_CLANG_FORMAT_UTILITY "Allow clang-format to modify files" {%raw%}${{%endraw%}{{ PROJECT_NAME | upper }}_USE_CODE_QUALITY_TOOLS})
+
+if({{ PROJECT_NAME | upper }}_ALLOW_CLANG_FORMAT_UTILITY)
+    # if custom path check there first
+    if(CLANG_FORMAT_ROOT_DIR)
+        find_program(CLANG_FORMAT_UTILITY_EXECUTABLE
+            NAMES ${CLANG_FORMAT_BIN}
+            PATHS "${CLANG_FORMAT_ROOT_DIR}"
+            NO_DEFAULT_PATH)
+    endif()
+
+    find_program(CLANG_FORMAT_UTILITY_EXECUTABLE NAMES ${CLANG_FORMAT_BIN})
+
+    include(FindPackageHandleStandardArgs)
+    FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+        ClangFormat
+        DEFAULT_MSG
+        CLANG_FORMAT_UTILITY_EXECUTABLE
+    )
+
+    mark_as_advanced(
+        CLANG_FORMAT_UTILITY_EXECUTABLE
+        CLANG_FORMAT_BIN
+    )
+
+    if(ClangFormat_FOUND)
+        include(clang-format)
+    endif()
+endif()

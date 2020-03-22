@@ -15,7 +15,7 @@
     state: directory
   loop:
     - dest: "build"
-    - dest: "include"
+    - dest: "include/{{ project_root_path | basename }}"
     - dest: "src"
       use: "{{ not project['attributes']['header_only'] }}"
     - dest: "etc"
@@ -53,7 +53,7 @@
       - "lib/"
 
 - name: establish clang-format
-  when: build['format'] is defined
+  when: format is defined
   copy:
-    content: "{{ build['format'] }}"
+    content: "{{ format }}"
     dest: "{{ project_root_path }}/.clang-format"

@@ -7,6 +7,8 @@ CMake files inspired by:
   - https://github.com/ttroy50/cmake-examples
   - https://github.com/sunsided/cmake/blob/master/CMakeLists.txt
   - [docs using Sphinx and Doxygen](https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/)
+  - [lefticus' starter project](https://github.com/lefticus/cpp_starter_project)
+  - [StableCoder's cmake utilities](https://github.com/StableCoder/cmake-scripts)
 
 Special thanks to: [tomas321](https://github.com/tomas321)
 
@@ -46,9 +48,10 @@ These variables can be further used to specify mode details:
       attributes:
         header_only:    # bool, is the project header-only
 
+    format:             # str, clang format file content
+
     build:
       settings:         # dict, key represents the setting name, value represents the value
-      format:           # str, clang format file content
       languages:        # list, languages to compile (C|CXX|CUDA|FORTRAN)
       preferences:
         use_build_type_subdir:      # bool, divide the build into build type subdirs

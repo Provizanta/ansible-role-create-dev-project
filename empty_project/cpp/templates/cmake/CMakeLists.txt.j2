@@ -1,4 +1,5 @@
 # {{ ansible_managed }}
+# generated using: https://github.com/Provizanta/ansible-role-create-dev-project.git
 
 {% set cmake_minimum_version = '3.15' -%}
 cmake_minimum_required(VERSION {{ cmake_minimum_version | default('3.13') }} FATAL_ERROR)
@@ -28,16 +29,14 @@ set(project_VERSION_MINOR ${CMAKE_MATCH_2})
 set(project_VERSION_PATCH ${CMAKE_MATCH_3})
 set(project_VERSION "${project_VERSION_MAJOR}.${project_VERSION_MINOR}.${project_VERSION_PATCH}")
 
-project("{{ project['name'] }}"
+{% set PROJECT_NAME = (project_root_path | basename) -%}
+project("{{ PROJECT_NAME }}"
     VERSION ${project_VERSION}
     {% if cmake_minimum_version is version('3.9', '>=') and project['description']['short'] is defined -%}DESCRIPTION "{{ project['description']['short'] }}"
     {% endif -%}
     {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ build['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
     {%- endif %}
 )
-
-configure_file(version.h.in ${PROJECT_SOURCE_DIR}/include/version.h)
-
 
 # set default build type
 if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
@@ -71,16 +70,18 @@ endif()
 # scm
 include(LoadSourceControl)
 
+option({{ PROJECT_NAME | upper }}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" ON)
+
+{% if format is defined -%}
+# format
+set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" ${project_BINARY_DIR})
+find_package(ClangFormat)
+{% endif %}
+
 # utilities
 find_package(Ccache)
 find_package(ClangTidy)
 find_package(CppCheck)
-
-{% if build['format'] is defined %}
-# format
-set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" ${CMAKE_BINARY_DIR})
-find_package(ClangFormat)
-{% endif %}
 
 {% if tests | length > 0 %}
 # TESTING
@@ -94,10 +95,11 @@ include({{ i }})
 
 # BUILD TARGETS
 {% if project['attributes']['header_only'] %}
-include(include)
+include_directories(include)
 {% else %}
 add_subdirectory(src)
 {% endif %}
+
 
 # INSTALL
 {#-
@@ -105,21 +107,16 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to ${project_BINARY_DIR}/install")
     set(CMAKE_INSTALL_PREFIX "${project_BINARY_DIR}/install" CACHE STRING "The path to use for install" FORCE)
 endif()
-#}
+-#}
 
-{% if not project['attributes']['header_only'] %}
-install(DIRECTORY ${project_BINARY_DIR}/bin/
-        DESTINATION bin)        # binaries
+option({{ PROJECT_NAME | upper }}_INSTALL ON)
+if({{ PROJECT_NAME | upper }}_INSTALL)
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
+            DESTINATION include/${PROJECT_NAME})    # include
 
-install(DIRECTORY ${project_BINARY_DIR}/lib/
-        DESTINATION lib)        # libraries
-{% endif %}
-
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-        DESTINATION include)    # include
-
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/etc/
-        DESTINATION etc)        # other
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/etc/
+            DESTINATION etc/${PROJECT_NAME})        # other
+endif()
 
 
 # DOCS
