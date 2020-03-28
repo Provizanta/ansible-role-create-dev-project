@@ -1,10 +1,9 @@
 # {{ ansible_managed }}
 
 # clang-tidy
-{% set PROJECT_NAME = (project_root_path | basename) -%}
-option({{ PROJECT_NAME | upper }}_ALLOW_CLANG_TIDY_UTILITY "Allow clang-tidy to run on compiled files" {%raw%}${{%endraw%}{{ PROJECT_NAME | upper }}_USE_CODE_QUALITY_TOOLS})
+option(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_TIDY_UTILITY "Allow clang-tidy to run on compiled files" ${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS)
 
-if({{ PROJECT_NAME | upper }}_ALLOW_CLANG_TIDY_UTILITY AND CMAKE_VERSION VERSION_GREATER 3.6)
+if(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_TIDY_UTILITY AND CMAKE_VERSION VERSION_GREATER 3.6)
     set(CLANG_TIDY_BINARY "clang-tidy" "clang-tidy-10" "clang-tidy-9" "clang-tidy-8" "clang-tidy-7" "clang-tidy-6" CACHE STRING "Clang-tidy binary name or path to the desired binary")
     set(CLANG_TIDY_EXTRA_ARGS "-header-filter=.*" CACHE STRING "Clang-tidy extra arguments to be passed to the binary")
 

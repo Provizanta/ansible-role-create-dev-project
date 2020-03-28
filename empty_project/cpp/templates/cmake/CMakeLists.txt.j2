@@ -29,14 +29,15 @@ set(project_VERSION_MINOR ${CMAKE_MATCH_2})
 set(project_VERSION_PATCH ${CMAKE_MATCH_3})
 set(project_VERSION "${project_VERSION_MAJOR}.${project_VERSION_MINOR}.${project_VERSION_PATCH}")
 
-{% set PROJECT_NAME = (project_root_path | basename) -%}
-project("{{ PROJECT_NAME }}"
+project("{{ project_root_path | basename }}"
     VERSION ${project_VERSION}
     {% if cmake_minimum_version is version('3.9', '>=') and project['description']['short'] is defined -%}DESCRIPTION "{{ project['description']['short'] }}"
     {% endif -%}
     {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ build['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
     {%- endif %}
 )
+
+string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPERCASE)
 
 # set default build type
 if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
@@ -70,7 +71,7 @@ endif()
 # scm
 include(LoadSourceControl)
 
-option({{ PROJECT_NAME | upper }}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" ON)
+option(${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" ON)
 
 {% if format is defined -%}
 # format
@@ -82,8 +83,9 @@ find_package(ClangFormat)
 find_package(Ccache)
 find_package(ClangTidy)
 find_package(CppCheck)
+{% if tests | length > 0 %}include(sanitizers){% endif %}
 
-{% if tests | length > 0 %}
+{% if tests | length > 0 -%}
 # TESTING
 enable_testing()
 
@@ -102,15 +104,14 @@ add_subdirectory(src)
 
 
 # INSTALL
-{#-
+{#
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to ${project_BINARY_DIR}/install")
     set(CMAKE_INSTALL_PREFIX "${project_BINARY_DIR}/install" CACHE STRING "The path to use for install" FORCE)
 endif()
 -#}
-
-option({{ PROJECT_NAME | upper }}_INSTALL ON)
-if({{ PROJECT_NAME | upper }}_INSTALL)
+option(${PROJECT_NAME_UPPERCASE}_INSTALL ON)
+if(${PROJECT_NAME_UPPERCASE}_INSTALL)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
             DESTINATION include/${PROJECT_NAME})    # include
 

@@ -23,7 +23,7 @@
     - dest: "tests"
       use: "{{ tests | length > 0 }}"
 
-- include_tasks: build/cmake.yml
+- include_tasks: cmake.yml
 
 - name: establish project readme
   template:
