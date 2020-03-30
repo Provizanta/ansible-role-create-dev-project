@@ -42,9 +42,9 @@
     dest: "{{ project_root_path }}/cmake/modules/{{ (item['file'] | basename | splitext)[0] }}"
   loop:
     - file: "clang-format.cmake.j2"
-      use: "{{ format is defined }}"
+      use: "{{ format['clang'] is defined }}"
     - file: "FindClangFormat.cmake.j2"
-      use: "{{ format is defined }}"
+      use: "{{ format['clang'] is defined }}"
     - file: "LoadSanitizer.cmake.j2"
       use: "{{ (tests | length) > 0 }}"
 
@@ -55,7 +55,7 @@
     dest: "{{ project_root_path }}/cmake/scripts/{{ item['file'] | basename }}"
   loop:
     - file: "clang-format-check-changed.py"
-      use: "{{ format is defined }}"
+      use: "{{ format['clang'] is defined }}"
 
 - name: establish test CMake module files
   template:

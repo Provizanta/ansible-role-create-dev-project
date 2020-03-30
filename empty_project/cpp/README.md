@@ -48,7 +48,9 @@ These variables can be further used to specify mode details:
       attributes:
         header_only:    # bool, is the project header-only
 
-    format:             # str, clang format file content
+    format:
+      clang:            # str, clang format file content
+      cmake:            # dics, cmake format YAML structure
 
     build:
       settings:         # dict, key represents the setting name, value represents the value

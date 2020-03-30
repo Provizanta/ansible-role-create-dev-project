@@ -53,7 +53,13 @@
       - "lib/"
 
 - name: establish clang-format
-  when: format is defined
+  when: format['clang'] is defined
   copy:
-    content: "{{ format }}"
+    content: "{{ format['clang'] }}"
     dest: "{{ project_root_path }}/.clang-format"
+
+- name: establish cmake-format.yaml
+  when: format['cmake'] is defined
+  copy:
+    content: "{{ format['cmake'] | to_nice_yaml(indent=2) }}"
+    dest: "{{ project_root_path }}/.cmake-format.yml"
