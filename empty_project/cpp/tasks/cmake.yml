@@ -45,7 +45,7 @@
       use: "{{ format is defined }}"
     - file: "FindClangFormat.cmake.j2"
       use: "{{ format is defined }}"
-    - file: "sanitizers.cmake.j2"
+    - file: "LoadSanitizer.cmake.j2"
       use: "{{ (tests | length) > 0 }}"
 
 - name: establish CMake script files

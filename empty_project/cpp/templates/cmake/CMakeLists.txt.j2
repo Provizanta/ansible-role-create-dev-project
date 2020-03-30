@@ -93,7 +93,7 @@ find_package(Ccache)
 find_package(ClangTidy)
 find_package(CppCheck)
 {% if tests | length > 0 -%}
-include(sanitizers)
+include(LoadSanitizer)
 
 
 # TESTING
