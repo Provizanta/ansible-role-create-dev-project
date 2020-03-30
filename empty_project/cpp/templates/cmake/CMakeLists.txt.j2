@@ -92,10 +92,11 @@ find_package(ClangFormat)
 find_package(Ccache)
 find_package(ClangTidy)
 find_package(CppCheck)
+
+# definitions
+include(AddSanitizers)
+
 {% if tests | length > 0 -%}
-include(LoadSanitizer)
-
-
 # TESTING
 enable_testing()
 
@@ -103,7 +104,6 @@ enable_testing()
 include({{ i }})
 {% endfor %}
 {% endif %}
-
 
 # BUILD TARGETS
 {% if project['attributes']['header_only'] %}

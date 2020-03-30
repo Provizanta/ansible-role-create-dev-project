@@ -1,0 +1,47 @@
+# {{ ansible_managed }}
+
+function(add_sanitizer_options)
+    set(options "ENABLE_COVERAGE")
+    set(one_value_args "")
+    set(multi_value_args TARGETS SANITIZERS)
+    cmake_parse_arguments(ADD_SANITIZER_OPTIONS "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(SANITIZER_OPTIONS "address" "memory" "undefined" "thread" "leak")
+
+        set(ADDED_SANITIZER_FLAGS "-fno-omit-frame-pointer")
+        if(ADD_SANITIZER_OPTIONS_ENABLE_COVERAGE)
+            foreach(TARGET IN LISTS ADD_SANITIZER_OPTIONS_TARGETS)
+                message(STATUS "Building '${TARGET}' with coverage options")
+                target_compile_options(${TARGET} INTERFACE "--coverage -O0 -g")
+                target_link_libraries(${TARGET} INTERFACE "--coverage")
+            endforeach()
+        elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            list(APPEND ADDED_SANITIZER_FLAGS "-O1")
+        endif()
+
+        set(ACCEPTED_SANITIZER_FLAGS "")
+        foreach(X IN LISTS ADD_SANITIZER_OPTIONS_SANITIZERS)
+            string(TOLOWER ${X} CURRENT_SANITIZER)
+            if(CURRENT_SANITIZER IN_LIST SANITIZER_OPTIONS)
+                list(APPEND ACCEPTED_SANITIZER_FLAGS ${CURRENT_SANITIZER})
+            endif()
+        endforeach()
+
+        if(ACCEPTED_SANITIZER_FLAGS AND NOT "${ACCEPTED_SANITIZER_FLAGS}" STREQUAL "")
+            list(JOIN ACCEPTED_SANITIZER_FLAGS "," ACCEPTED_SANITIZER_FLAGS)
+            set(ACCEPTED_SANITIZER_FLAGS "-fsanitize=${ACCEPTED_SANITIZER_FLAGS}")
+            list(APPEND ADDED_SANITIZER_FLAGS ${ACCEPTED_SANITIZER_FLAGS})
+
+            list(JOIN ADDED_SANITIZER_FLAGS " " ADDED_SANITIZER_FLAGS)
+
+            foreach(TARGET IN LISTS ADD_SANITIZER_OPTIONS_TARGETS)
+                message(STATUS "Building '${TARGET}' with sanitizer options '${ADDED_SANITIZER_FLAGS}'")
+                target_compile_options(${TARGET} INTERFACE ${ADDED_SANITIZER_FLAGS})
+                target_link_libraries(${TARGET} INTERFACE ${ADDED_SANITIZER_FLAGS})
+            endforeach()
+        endif()
+    else()
+        message(FATAL_ERROR "Using sanitizers is not supported with this compiler.")
+    endif()
+endfunction()
