@@ -12,7 +12,7 @@ if({{ PROJECT_NAME | upper }}_BUILD_DOCUMENTATION)
         # file(GLOB_RECURSE THIS_PROJECT_PUBLIC_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
         message(STATUS "Found Doxygen: use target 'docs-doxygen' to build doxygen documentation")
 
-        set(DOXYGEN_OUTPUT_DIRECTORY {{ build['preferences']['use_build_type_subdir'] | ternary('${project_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}') }}/doxygen)
+        set(DOXYGEN_OUTPUT_DIRECTORY {{ build['preferences']['use_build_type_subdir'] | ternary('${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}') }}/doxygen)
         doxygen_add_docs("docs-doxygen"
             ${PROJECT_SOURCE_DIR}/src/
             ${PROJECT_SOURCE_DIR}/include/

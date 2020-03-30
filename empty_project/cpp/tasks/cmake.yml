@@ -87,7 +87,7 @@
       #define __VERSION_H__
 
       // version variable that will be substituted by cmake
-      const char* version = "${project_VERSION}";
+      const char* version = "${${PROJECT_NAME_UPPERCASE}_VERSION}";
 
       #endif	// __VERSION_H__
     dest: "{{ project_root_path }}/version.h.in"
