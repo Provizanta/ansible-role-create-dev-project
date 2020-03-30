@@ -1,7 +1,7 @@
 # {{ ansible_managed }}
 
 set(${PROJECT_NAME_UPPERCASE}_INLINE_SANITIZER "" CACHE
-    STRING "Compile with a sanitizer, options are: Address, Memory, Undefined, Thread, Leak, 'Address,Undefined'"
+    STRING "Compile with a sanitizer, options are: 'address', 'memory', 'undefined', 'thread', 'leak', 'address,undefined'"
 )
 
 set(SANITIZER_OPTIONS "address" "memory" "undefined" "thread" "leak" "address,undefined")
@@ -20,13 +20,18 @@ if(${PROJECT_NAME_UPPERCASE}_INLINE_SANITIZER)
                 LIST(APPEND ${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS "-fsanitize=${X}")
                 LIST(JOIN ${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS " " ${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS)
 
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS}")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS}")
+                # include(CheckCXXCompilerFlag)
+                # check_cxx_compiler_flag(${${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS} CAN_USE_SUCH_SANITIZER)
+                # if(CAN_USE_SUCH_SANITIZER)
+                    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS}")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS}")
 
-                message(STATUS "Building with sanitizer options '${${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS}'")
-                break()
+                    message(STATUS "Building with '${CURRENT_SANITIZER}' sanitizer options: '${${PROJECT_NAME_UPPERCASE}_SANITIZER_FLAGS}'")
+                    break()
+                # else()
+                #     message(STATUS "Sanitizer cannot be used with this compiler")
+                # endif()
             endif()
-
         endforeach()
     else()
         message(FATAL_ERROR "Using sanitizers is not supported with this compiler.")
