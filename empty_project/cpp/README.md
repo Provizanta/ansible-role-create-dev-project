@@ -20,6 +20,8 @@ To incorporate:
 * LWYU
   * `cmake -DCMAKE_LINK_WHAT_YOU_USE=TRUE ..`
 
+Notes on creating a quality documentations are on [writethedocs.org](https://www.writethedocs.org/guide/)
+
 Requirements
 ------------
 
