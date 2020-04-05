@@ -3,7 +3,7 @@
 # Locate cppcheck
 #
 # This module defines
-#  CPPCHECK_UTILITY_EXECUTABLE, where to find cppcheck
+#  CPPCHECK_EXECUTABLE, where to find cppcheck
 #
 # To help find the binary you can set CPPCHECK_ROOT_DIR to search a custom path
 # Exported argumets include
@@ -20,29 +20,35 @@
 #
 # find the cppcheck binary
 
-option(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY "Allow CppCheck to run on compiled files" ${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS)
+option(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY "Allow CppCheck to run on compiled files" ${${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS})
 
 if(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY)
     # check custom path if present
     if(CPPCHECK_ROOT_DIR)
-        find_program(CPPCHECK_UTILITY_EXECUTABLE
-            NAMES cppcheck
+        find_program(CPPCHECK_EXECUTABLE
+            NAMES "cppcheck"
+            DOC "cppcheck static analyzer executable"
             PATHS "${CPPCHECK_ROOT_DIR}"
             NO_DEFAULT_PATH)
+    else()
+        find_program(CPPCHECK_EXECUTABLE
+            NAMES "cppcheck"
+            DOC "cppcheck static analyzer executable"
+        )
     endif()
 
-    find_program(CPPCHECK_UTILITY_EXECUTABLE NAMES "cppcheck")
-
-    if(CPPCHECK_UTILITY_EXECUTABLE)
-        execute_process(COMMAND ${CPPCHECK_UTILITY_EXECUTABLE} --version
-                      OUTPUT_VARIABLE CPPCHECK_VERSION
-                      ERROR_QUIET
-                      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(CPPCHECK_EXECUTABLE)
+        execute_process(COMMAND ${CPPCHECK_EXECUTABLE} --version
+            OUTPUT_VARIABLE CPPCHECK_VERSION
+            ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
 
         set(CPPCHECK_THREADS_ARG "-j8" CACHE STRING "The number of threads to use")
         if(EXISTS "${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/compile_commands.json")
             set(CPPCHECK_BUILD_DIR_ARG "--project=${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/compile_commands.json" CACHE STRING "The build directory to use")
         else()
+            message(STATUS "Found CppCheck: target 'static-analysis-cppcheck' requires CMAKE_EXPORT_COMPILE_COMMANDS=ON")
             set(CPPCHECK_BUILD_DIR_ARG "" CACHE STRING "The build directory to use")
         endif()
         if(EXISTS "${PROJECT_SOURCE_DIR}/.cppcheck_suppressions")
@@ -54,7 +60,8 @@ if(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY)
         set(CPPCHECK_CHECKS_ARGS "" CACHE STRING "Arguments for the checks to run")
         set(CPPCHECK_OTHER_ARGS "--quiet" CACHE STRING "Other arguments")
 
-        set(CPPCHECK_ALL_ARGS
+        set(CPPCHECK_COMMAND
+            ${CPPCHECK_EXECUTABLE}
             ${CPPCHECK_THREADS_ARG}
             ${CPPCHECK_PROJECT_ARG}
             ${CPPCHECK_BUILD_DIR_ARG}
@@ -64,37 +71,24 @@ if(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY)
             ${CPPCHECK_OTHER_ARGS}
         )
 
-        set(CPPCHECK_COMMAND
-            ${CPPCHECK_UTILITY_EXECUTABLE}
-            ${CPPCHECK_ALL_ARGS}
-        )
-    endif()
-
-    FIND_PACKAGE_HANDLE_STANDARD_ARGS(
-        CppCheck
-        DEFAULT_MSG
-        CPPCHECK_UTILITY_EXECUTABLE)
-
-    mark_as_advanced(
-        CPPCHECK_UTILITY_EXECUTABLE
-        CPPCHECK_THREADS_ARG
-        CPPCHECK_PROJECT_ARG
-        CPPCHECK_BUILD_DIR_ARG
-        CPPCHECK_ERROR_EXITCODE_ARG
-        CPPCHECK_SUPPRESSIONS
-        CPPCHECK_CHECKS_ARGS
-        CPPCHECK_OTHER_ARGS
-    )
-
-    if(CPPCHECK_FOUND)
-        message(STATUS "Found CppCheck: target 'static-analysis-cppcheck' requires CMAKE_EXPORT_COMPILE_COMMANDS=ON")
         if(EXISTS "${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/compile_commands.json")
             file(MAKE_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/analysis/cppcheck)
-            add_custom_target(static-analysis-cppcheck COMMAND ${CPPCHECK_COMMAND})
+            add_custom_target(static-analysis-cppcheck
+                COMMAND ${CPPCHECK_COMMAND}
+            )
         endif()
 
-        if(CMAKE_VERSION VERSION_GREATER 3.6)
-            set(CMAKE_CXX_CPPCHECK "${CPPCHECK_COMMAND}")
-        endif()
+        set(CMAKE_CXX_CPPCHECK "${CPPCHECK_COMMAND}")
     endif()
 endif()
+
+mark_as_advanced(
+    CPPCHECK_EXECUTABLE
+    CPPCHECK_THREADS_ARG
+    CPPCHECK_PROJECT_ARG
+    CPPCHECK_BUILD_DIR_ARG
+    CPPCHECK_ERROR_EXITCODE_ARG
+    CPPCHECK_SUPPRESSIONS
+    CPPCHECK_CHECKS_ARGS
+    CPPCHECK_OTHER_ARGS
+)

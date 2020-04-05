@@ -1,8 +1,7 @@
 # {{ ansible_managed }}
-# generated using: https://github.com/Provizanta/ansible-role-create-dev-project.git
+# INFO: generated using https://github.com/Provizanta/ansible-role-create-dev-project.git
 
-{% set cmake_minimum_version = '3.12' -%}
-cmake_minimum_required(VERSION {{ cmake_minimum_version | default('3.13') }} FATAL_ERROR)
+cmake_minimum_required(VERSION {{ __cmake_minimum_version }} FATAL_ERROR)
 
 # Summarize available features
 # https://cmake.org/cmake/help/v3.11/module/FeatureSummary.html
@@ -16,37 +15,30 @@ if(ipo_supported)
     set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-{% if cmake_minimum_version is version('3.12', '<') and cmake_minimum_version is version('3.5', '>') -%}
-if(${CMAKE_VERSION} VERSION_LESS {{ CMAKE_VERSION }})
-    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+# Common includes
+include(CMakeDependentOption)
+
+# Require out-of-source builds
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+    message(FATAL_ERROR "You cannot build in a source directory (or containing CMakeLists.txt file). Please make a build subdirectory and remove CMakeCache.txt and CMakeFiles.")
 endif()
-{%- endif %}
+
 
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" READ_VERSION)
 string(REGEX MATCH "([0-9]*).([0-9]*).([0-9]*)" _ ${READ_VERSION})
-set(${PROJECT_NAME_UPPERCASE}_VERSION_MAJOR ${CMAKE_MATCH_1})
-set(${PROJECT_NAME_UPPERCASE}_VERSION_MINOR ${CMAKE_MATCH_2})
-set(${PROJECT_NAME_UPPERCASE}_VERSION_PATCH ${CMAKE_MATCH_3})
-set(${PROJECT_NAME_UPPERCASE}_VERSION "${${PROJECT_NAME_UPPERCASE}_VERSION_MAJOR}.${${PROJECT_NAME_UPPERCASE}_VERSION_MINOR}.${${PROJECT_NAME_UPPERCASE}_VERSION_PATCH}")
+set({{ __project_name | upper }}_VERSION_MAJOR ${CMAKE_MATCH_1})
+set({{ __project_name | upper }}_VERSION_MINOR ${CMAKE_MATCH_2})
+set({{ __project_name | upper }}_VERSION_PATCH ${CMAKE_MATCH_3})
+set({{ __project_name | upper }}_VERSION "{{ '${%s_VERSION_MAJOR}' | format(__project_name | upper) }}.{{ '${%s_VERSION_MINOR}' | format(__project_name | upper) }}.{{ '${%s_VERSION_PATCH}' | format(__project_name | upper) }}")
 
-project("{{ project_root_path | basename }}"
-    VERSION ${${PROJECT_NAME_UPPERCASE}_VERSION}
-    {% if cmake_minimum_version is version('3.9', '>=') and project['description']['short'] is defined -%}DESCRIPTION "{{ project['description']['short'] }}"
+project("{{ __project_name }}"
+    VERSION {{ '${%s_VERSION}' | format(__project_name | upper) }}
+    {% if __cmake_minimum_version is version('3.9', '>=') and project['description']['short'] is defined -%}DESCRIPTION "{{ project['description']['short'] }}"
     {% endif -%}
-    {% if cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ build['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
+    {% if __cmake_minimum_version is version('3.7', '>=') -%}LANGUAGES {{ build['languages'] | map('regex_replace', '^(.*)$', '"\\1"') | list | join(' ') }}
     {%- endif %}
 )
-
-string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPERCASE)
-
-
-# determine, whether project is built as a subproject or as a main project
-set(${PROJECT_NAME_UPPERCASE}_MASTER_PROJECT OFF)
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-  set(${PROJECT_NAME_UPPERCASE}_MASTER_PROJECT ON)
-  message(STATUS "Built as a master project with CMake version: ${CMAKE_VERSION}")
-endif ()
-
 
 # set default build type
 if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
@@ -55,36 +47,50 @@ if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# determine, whether project is built as a subproject or as a main project
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set({{ __project_name | upper }}_IS_MASTER_PROJECT ON)
+    message(STATUS "Built as a master project with CMake version: ${CMAKE_VERSION}")
+else()
+    set({{ __project_name | upper }}_IS_MASTER_PROJECT OFF)
+endif()
+
+# project options that control generation of various targets
+option({{ __project_name | upper }}_DOCS "Generate the docs target." {{ '${%s_IS_MASTER_PROJECT}' | format(__project_name | upper) }})
+option({{ __project_name | upper }}_INSTALL "Generate the install target." {{ '${%s_IS_MASTER_PROJECT}' | format(__project_name | upper) }})
+{% if tests | length > 0 -%}
+option({{ __project_name | upper }}_TESTS "Generate the test target." {{ '${%s_IS_MASTER_PROJECT}' | format(__project_name | upper) }})
+{%- endif %}
+
+if({{ '%s_IS_MASTER_PROJECT AND CMAKE_BUILD_TYPE STREQUAL "Debug"' | format(__project_name | upper) }})
+    option({{ __project_name | upper }}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" ON)
+    message(STATUS "Built as a master project with CMake version: ${CMAKE_VERSION}")
+else()
+    option({{ __project_name | upper }}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" OFF)
+endif()
+
 
 # explicit project-wide settings
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-set(${PROJECT_NAME_UPPERCASE}_BINARY_DIR ${CMAKE_BINARY_DIR}/{% if build['preferences']['use_build_type_subdir'] %}${CMAKE_BUILD_TYPE}{% endif %})
-set(external_project_SOURCE_DIR ${PROJECT_SOURCE_DIR}/external)
+set(PROJECT_NAME_UPPERCASE "{{ __project_name | upper }}")
+set({{ __project_name | upper }}_BINARY_DIR ${CMAKE_BINARY_DIR}/{% if build['preferences']['use_build_type_subdir'] %}${CMAKE_BUILD_TYPE}{% endif %})
+set({{ __project_name | upper }}_EXTERNAL_DEPENDENCIES_SOURCE_DIR ${PROJECT_SOURCE_DIR}/external)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/arch)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}/arch)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}/bin)
 
-{% for key, value in (build['settings'] | default({})).items() %}
+{% for key, value in (build['settings'] | default({})).items() -%}
 set({{ key }} {{ value }})
 {% endfor %}
-option(${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" ${${PROJECT_NAME_UPPERCASE}_MASTER_PROJECT})
-
-
-# require out-of-source builds
-file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
-if(EXISTS "${LOC_PATH}")
-    message(FATAL_ERROR "You cannot build in a source directory (or containing CMakeLists.txt file). Please make a build subdirectory and remove CMakeCache.txt and CMakeFiles.")
-endif()
-
 
 # scm
 include(LoadSourceControl)
 
 {% if format is defined -%}
 # format
-set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR} ${CLANG_FORMAT_EXCLUDE_PATTERNS})
+set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }} ${CLANG_FORMAT_EXCLUDE_PATTERNS})
 find_package(ClangFormat)
 {% endif %}
 
@@ -97,39 +103,34 @@ find_package(CppCheck)
 include(AddSanitizers)
 include(AddProjectWarnings)
 
-{% if tests | length > 0 -%}
-# TESTING
-enable_testing()
-
-{% for i in tests if i in frameworks %}
-include({{ i }})
-{% endfor %}
-{% endif %}
-
-# BUILD TARGETS
-{% if project['attributes']['header_only'] %}
+# build
+{% if project['attributes']['header_only'] -%}
 add_subdirectory(include)
-{% else %}
+{%- else -%}
 add_subdirectory(src)
 {% endif %}
 
-
-# INSTALL
 {#
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/install")
-    set(CMAKE_INSTALL_PREFIX "${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/install" CACHE STRING "The path to use for install" FORCE)
+    message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to {{ '${%s}_BINARY_DIR}/install' | format(__project_name | upper) }}")
+    set(CMAKE_INSTALL_PREFIX "{{ '${%s}_BINARY_DIR}/install' | format(__project_name | upper) }}" CACHE STRING "The path to use for install" FORCE)
 endif()
 -#}
-option(${PROJECT_NAME_UPPERCASE}_INSTALL ${${PROJECT_NAME_UPPERCASE}_MASTER_PROJECT})
-if(${PROJECT_NAME_UPPERCASE}_INSTALL)
-    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/
-            DESTINATION include/${PROJECT_NAME})    # include
 
+if({{ __project_name | upper }}_INSTALL)
     install(DIRECTORY ${PROJECT_SOURCE_DIR}/etc/
-            DESTINATION etc/${PROJECT_NAME})        # other
+        DESTINATION etc/${PROJECT_NAME}         # other
+    )
 endif()
 
+{% if tests | length > 0 -%}
+if({{ __project_name | upper }}_TESTS)
+    enable_testing()
+{%   for i in tests if i in frameworks %}
+    include({{ i }})
+{%   endfor %}
+{%- endif -%}
 
-# DOCS
-add_subdirectory("docs")
+if({{ __project_name | upper }}_DOCS)
+    add_subdirectory("docs")
+endif()

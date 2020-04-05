@@ -1,5 +1,16 @@
 ---
 
+- command: cmake --version
+  register: cmake_version
+  changed_when: false
+  failed_when: false
+  tags: always
+
+- name: prepare facts
+  set_fact:
+    __cmake_minimum_version: "{{ (cmake_version['stdout'] is defined) | ternary(cmake_version.stdout | regex_search('([0-9]+\\.)*[0-9]+'), '3.12') }}"  # noqa 204
+    __project_name: "{{ project_root_path | basename }}"
+
 - name: establish global CMakeLists.txt
   template:
     src: "cmake/CMakeLists.txt.j2"

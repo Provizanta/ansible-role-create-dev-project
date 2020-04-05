@@ -1,34 +1,32 @@
 # {{ ansible_managed }}
 
-# clang-format
-set(CLANG_FORMAT_BIN "clang-format" "clang-format-10" "clang-format-9" "clang-format-8" "clang-format-7" "clang-format-6" CACHE STRING "Clang-format binary name or path to the desired binary")
+set(CLANG_FORMAT_BIN "clang-format" CACHE STRING "Clang-format binary name or path to the desired binary")
 
-option(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY "Allow clang-format to modify files" ${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS)
+option(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY "Allow clang-format to modify files" ${${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS})
 
 if(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY)
     # if custom path check there first
     if(CLANG_FORMAT_ROOT_DIR)
-        find_program(CLANG_FORMAT_UTILITY_EXECUTABLE
+        find_program(CLANG_FORMAT_EXECUTABLE
             NAMES ${CLANG_FORMAT_BIN}
+            DOC "clang-format binary enables code format targets"
             PATHS "${CLANG_FORMAT_ROOT_DIR}"
-            NO_DEFAULT_PATH)
+            NO_DEFAULT_PATH
+        )
+    else()
+        find_program(CLANG_FORMAT_EXECUTABLE
+            NAMES ${CLANG_FORMAT_BIN}
+            DOC "clang-format binary enables code format targets"
+        )
     endif()
 
-    find_program(CLANG_FORMAT_UTILITY_EXECUTABLE NAMES ${CLANG_FORMAT_BIN})
-
-    include(FindPackageHandleStandardArgs)
-    FIND_PACKAGE_HANDLE_STANDARD_ARGS(
-        ClangFormat
-        DEFAULT_MSG
-        CLANG_FORMAT_UTILITY_EXECUTABLE
-    )
-
-    mark_as_advanced(
-        CLANG_FORMAT_UTILITY_EXECUTABLE
-        CLANG_FORMAT_BIN
-    )
-
-    if(ClangFormat_FOUND)
+    if(CLANG_FORMAT_EXECUTABLE)
         include(clang-format)
+        message(STATUS "Found clang-format: adding format targets")
     endif()
 endif()
+
+mark_as_advanced(
+    CLANG_FORMAT_EXECUTABLE
+    CLANG_FORMAT_BIN
+)

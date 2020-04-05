@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
 
-# sphinx
-find_program(SPHINX_UTILITY_EXECUTABLE NAMES "sphinx-build" DOC "Find sphinx documentation tool executable")
+find_program(SPHINX_EXECUTABLE
+    NAMES "sphinx-build"
+    DOC "Find sphinx documentation tool executable"
+)
 
 include(FindPackageHandleStandardArgs)
 
 #Handle standard arguments to find_package like REQUIRED and QUIET
-find_package_handle_standard_args(Sphinx
-                                  "Failed to find sphinx-build executable"
-                                  SPHINX_EXECUTABLE)
+find_package_handle_standard_args(Sphinx "Failed to find sphinx-build executable" SPHINX_EXECUTABLE)

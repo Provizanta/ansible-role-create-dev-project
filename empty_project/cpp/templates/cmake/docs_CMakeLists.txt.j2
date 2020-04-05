@@ -2,17 +2,20 @@
 
 find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
 
-{% set PROJECT_NAME = (project_root_path | basename) -%}
-option({{ PROJECT_NAME | upper }}_BUILD_DOCUMENTATION "Build project documentation using Doxygen."
-       ${DOXYGEN_FOUND})
-option({{ PROJECT_NAME | upper }}_INSTALL_DOCUMENTATION "Install entire project documentation." ${%raw%}{{%endraw%}{{ PROJECT_NAME | upper }}_BUILD_DOCUMENTATION})
+option(${PROJECT_NAME_UPPERCASE}_DOCS_BUILD "Build project documentation using Doxygen." ${DOXYGEN_FOUND})
+option(${PROJECT_NAME_UPPERCASE}_DOCS_INSTALL "Install the entire project documentation." ${PROJECT_NAME_UPPERCASE}_DOCS_BUILD)
 
-if({{ PROJECT_NAME | upper }}_BUILD_DOCUMENTATION)
+mark_as_advanced(
+    ${PROJECT_NAME_UPPERCASE}_DOCS_BUILD
+    ${PROJECT_NAME_UPPERCASE}_DOCS_INSTALL
+)
+
+if(${PROJECT_NAME_UPPERCASE}_DOCS_BUILD)
     if(DOXYGEN_FOUND)
         # file(GLOB_RECURSE THIS_PROJECT_PUBLIC_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
         message(STATUS "Found Doxygen: use target 'docs-doxygen' to build doxygen documentation")
 
-        set(DOXYGEN_OUTPUT_DIRECTORY {{ build['preferences']['use_build_type_subdir'] | ternary('${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}', '${CMAKE_CURRENT_SOURCE_DIR}') }}/doxygen)
+        set(DOXYGEN_OUTPUT_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/doxygen)
         doxygen_add_docs("docs-doxygen"
             ${PROJECT_SOURCE_DIR}/src/
             ${PROJECT_SOURCE_DIR}/include/
@@ -27,7 +30,7 @@ if({{ PROJECT_NAME | upper }}_BUILD_DOCUMENTATION)
     {#
     #   Needed a better integration with Sphinx: https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/
     #    find_package(Sphinx)
-    #    if(SPHINX_UTILITY_EXECUTABLE)
+    #    if(SPHINX_EXECUTABLE)
     #        set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
     #        set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
     #
@@ -41,14 +44,16 @@ if({{ PROJECT_NAME | upper }}_BUILD_DOCUMENTATION)
 
     if(DOC_TARGETS_IDENTIFIED)
         add_custom_target(docs ALL
-                          DEPENDS ${DOC_TARGETS_IDENTIFIED}
-                          COMMENT "Generate the entire project documentation")
+            DEPENDS ${DOC_TARGETS_IDENTIFIED}
+            COMMENT "Generate the entire project documentation"
+        )
         message(STATUS "Use target 'docs' to generate the entire project documentation")
     endif()
 
-    if({{ PROJECT_NAME | upper }}_INSTALL_DOCUMENTATION)
+    if(${PROJECT_NAME_UPPERCASE}_DOCS_INSTALL)
         install(DIRECTORY ${PROJECT_SOURCE_DIR}/docs
-                DESTINATION share/{{ PROJECT_NAME }}
-                PATTERN CMakeLists.txt EXCLUDE)
+            DESTINATION share/${PROJECT_NAME}
+            PATTERN CMakeLists.txt EXCLUDE
+        )
     endif()
 endif()
