@@ -42,13 +42,15 @@ def check_directory(directory, excludes, extensions):
                 output.append(filename)
     return output
 
+
 def get_git_root(git_bin):
     cmd = [git_bin, "rev-parse", "--show-toplevel"]
     try:
         return subprocess.check_output(cmd).strip()
-    except subprocess.CalledProcessError, e:
+    except subprocess.CalledProcessError as e:
         print("Error calling git [{}]".format(e))
         raise
+
 
 def clean_git_filename(line):
     """
@@ -138,8 +140,9 @@ def run_clang_format(clang_format_bin, changed_files):
 
 def cli():
     # global params
-    parser = argparse.ArgumentParser(prog='clang-format-check-changed',
-                                     description='Checks if files chagned in git match the .clang-format specification')
+    parser = argparse.ArgumentParser(
+        prog='clang-format-check-changed',
+        description='Checks if files chagned in git match the .clang-format specification')
     parser.add_argument("--file-extensions", type=str,
                         default=".cpp,.h,.cxx,.hxx,.hpp,.cc,.ipp",
                         help="Comma seperated list of file extensions to check")
@@ -158,6 +161,7 @@ def cli():
         return returncode
 
     return run_clang_format(args.clang_format_bin, changed_files)
+
 
 if __name__ == '__main__':
     sys.exit(cli())

@@ -52,8 +52,6 @@
     src: "cmake/optional_modules/{{ item['file'] }}"
     dest: "{{ project_root_path }}/cmake/modules/{{ (item['file'] | basename | splitext)[0] }}"
   loop:
-    - file: "clang-format.cmake.j2"
-      use: "{{ format['clang'] is defined }}"
     - file: "FindClangFormat.cmake.j2"
       use: "{{ format['clang'] is defined }}"
 

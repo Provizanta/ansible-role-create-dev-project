@@ -90,7 +90,7 @@ include(LoadSourceControl)
 
 {% if format is defined -%}
 # format
-set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }} ${CLANG_FORMAT_EXCLUDE_PATTERNS})
+set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" "external/" "{{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}" ${CLANG_FORMAT_EXCLUDE_PATTERNS})
 find_package(ClangFormat)
 {% endif %}
 

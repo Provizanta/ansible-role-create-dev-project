@@ -5,7 +5,6 @@ set(CLANG_FORMAT_BIN "clang-format" CACHE STRING "Clang-format binary name or pa
 option(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY "Allow clang-format to modify files" ${${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS})
 
 if(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY)
-    # if custom path check there first
     if(CLANG_FORMAT_ROOT_DIR)
         find_program(CLANG_FORMAT_EXECUTABLE
             NAMES ${CLANG_FORMAT_BIN}
@@ -21,12 +20,44 @@ if(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY)
     endif()
 
     if(CLANG_FORMAT_EXECUTABLE)
-        include(clang-format)
         message(STATUS "Found clang-format: adding format targets")
+
+        list(APPEND CLANG_FORMAT_CXX_FILE_EXTENSIONS *.cpp *.h *.cxx *.hxx *.hpp *.cc *.ipp)
+        file(GLOB_RECURSE ALL_SOURCE_FILES ${CLANG_FORMAT_CXX_FILE_EXTENSIONS})
+
+        list(APPEND CLANG_FORMAT_EXCLUDE_PATTERNS "/CMakeFiles/" "cmake/")
+
+        string(JOIN "|" EXCLUDE_PATTERN ${CLANG_FORMAT_EXCLUDE_PATTERNS})
+        set(EXCLUDE_PATTERN "^.*(${EXCLUDE_PATTERN}).*$")
+        list(FILTER ALL_SOURCE_FILES EXCLUDE REGEX ${EXCLUDE_PATTERN})
+
+        add_custom_target(format
+            COMMENT "Running clang-format to format source code files"
+            COMMAND ${CLANG_FORMAT_EXECUTABLE} -style=file -i ${ALL_SOURCE_FILES}
+        )
+
+        if(EXISTS ${PROJECT_SOURCE_DIR}/.git)
+            get_filename_component(CLANG_CHECK_PATH ${CMAKE_CURRENT_LIST_FILE} PATH)
+
+            string(JOIN "," FILE_EXTENSIONS ${CLANG_FORMAT_CXX_FILE_EXTENSIONS})
+            string(REGEX REPLACE "\\*" "" FILE_EXTENSIONS ${FILE_EXTENSIONS})
+
+            set(EXCLUDE_PATTERN_ARGS ${CLANG_FORMAT_EXCLUDE_PATTERNS})
+            list(TRANSFORM EXCLUDE_PATTERN_ARGS PREPEND --exclude=\")
+            list(TRANSFORM EXCLUDE_PATTERN_ARGS APPEND \")
+            string(JOIN " " EXCLUDE_PATTERN_ARGS ${EXCLUDE_PATTERN_ARGS})
+
+            add_custom_target(format-only-changed
+                COMMENT "Running clang-format on files identified by git as changed"
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+                COMMAND "${CLANG_CHECK_PATH}/../scripts/clang-format-check-changed.py --file-extensions \"${FILE_EXTENSIONS}\" ${EXCLUDE_PATTERN_ARGS} --clang-format-bin ${CLANG_FORMAT_EXECUTABLE}"
+            )
+        endif()
     endif()
 endif()
 
 mark_as_advanced(
-    CLANG_FORMAT_EXECUTABLE
     CLANG_FORMAT_BIN
+    CLANG_FORMAT_ROOT_DIR
+    CLANG_FORMAT_EXECUTABLE
 )
