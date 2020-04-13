@@ -2,9 +2,9 @@
 
 set(CLANG_FORMAT_BIN "clang-format" CACHE STRING "Clang-format binary name or path to the desired binary")
 
-option(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY "Allow clang-format to modify files" ${${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS})
+option(ALLOW_CLANG_FORMAT "Allow clang-format to modify files" ON)
 
-if(${PROJECT_NAME_UPPERCASE}_ALLOW_CLANG_FORMAT_UTILITY)
+if(ALLOW_CLANG_FORMAT)
     if(CLANG_FORMAT_ROOT_DIR)
         find_program(CLANG_FORMAT_EXECUTABLE
             NAMES ${CLANG_FORMAT_BIN}

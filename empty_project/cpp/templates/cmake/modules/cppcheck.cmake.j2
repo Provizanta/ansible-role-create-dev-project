@@ -20,9 +20,9 @@
 #
 # find the cppcheck binary
 
-option(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY "Allow CppCheck to run on compiled files" ${${PROJECT_NAME_UPPERCASE}_USE_CODE_QUALITY_TOOLS})
+option(ALLOW_CPPCHECK "Allow CppCheck to run on compiled files" ON)
 
-if(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY)
+if(ALLOW_CPPCHECK)
     # check custom path if present
     if(CPPCHECK_ROOT_DIR)
         find_program(CPPCHECK_EXECUTABLE
@@ -45,8 +45,8 @@ if(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY)
         )
 
         set(CPPCHECK_THREADS_ARG "-j8" CACHE STRING "The number of threads to use")
-        if(EXISTS "${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/compile_commands.json")
-            set(CPPCHECK_BUILD_DIR_ARG "--project=${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/compile_commands.json" CACHE STRING "The build directory to use")
+        if(EXISTS "${PROJECT_BINARY_DIR}/compile_commands.json")
+            set(CPPCHECK_BUILD_DIR_ARG "--project=${PROJECT_BINARY_DIR}/compile_commands.json" CACHE STRING "The build directory to use")
         else()
             message(STATUS "Found CppCheck: target 'static-analysis-cppcheck' requires CMAKE_EXPORT_COMPILE_COMMANDS=ON")
             set(CPPCHECK_BUILD_DIR_ARG "" CACHE STRING "The build directory to use")
@@ -71,8 +71,8 @@ if(${PROJECT_NAME_UPPERCASE}_ALLOW_CPPCHECK_UTILITY)
             ${CPPCHECK_OTHER_ARGS}
         )
 
-        if(EXISTS "${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/compile_commands.json")
-            file(MAKE_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/analysis/cppcheck)
+        if(EXISTS "${PROJECT_BINARY_DIR}/compile_commands.json")
+            file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/analysis/cppcheck)
             add_custom_target(static-analysis-cppcheck
                 COMMAND ${CPPCHECK_COMMAND}
             )

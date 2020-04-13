@@ -1,5 +1,6 @@
 # {{ ansible_managed }}
 
+# add_sanitizer_options can be used in in all build types but is most reasonable in debug
 function(add_sanitizer_options)
     set(options "ENABLE_COVERAGE")
     set(one_value_args "")

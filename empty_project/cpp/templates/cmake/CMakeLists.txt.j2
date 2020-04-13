@@ -62,24 +62,16 @@ option({{ __project_name | upper }}_INSTALL "Generate the install target." {{ '$
 option({{ __project_name | upper }}_TESTS "Generate the test target." {{ '${%s_IS_MASTER_PROJECT}' | format(__project_name | upper) }})
 {%- endif %}
 
-if({{ '%s_IS_MASTER_PROJECT AND CMAKE_BUILD_TYPE STREQUAL "Debug"' | format(__project_name | upper) }})
-    option({{ __project_name | upper }}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" ON)
-    message(STATUS "Built as a master project with CMake version: ${CMAKE_VERSION}")
-else()
-    option({{ __project_name | upper }}_USE_CODE_QUALITY_TOOLS "Allow execution and targets for code quality" OFF)
-endif()
-
 
 # explicit project-wide settings
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-set(PROJECT_NAME_UPPERCASE "{{ __project_name | upper }}")
 set({{ __project_name | upper }}_BINARY_DIR ${CMAKE_BINARY_DIR}/{% if build['preferences']['use_build_type_subdir'] %}${CMAKE_BUILD_TYPE}{% endif %})
 set({{ __project_name | upper }}_EXTERNAL_DEPENDENCIES_SOURCE_DIR ${PROJECT_SOURCE_DIR}/external)
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}/arch)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY {{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/arch)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 {% for key, value in (build['settings'] | default({})).items() -%}
 set({{ key }} {{ value }})
@@ -88,20 +80,25 @@ set({{ key }} {{ value }})
 # scm
 include(LoadSourceControl)
 
-{% if format is defined -%}
-# format
-set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" "external/" "{{ '${%s_BINARY_DIR}' | format(__project_name | upper) }}" ${CLANG_FORMAT_EXCLUDE_PATTERNS})
-find_package(ClangFormat)
-{% endif %}
-
-# utilities
-find_package(Ccache)
-find_package(ClangTidy)
-find_package(CppCheck)
-
 # definitions
 include(AddSanitizers)
 include(AddProjectWarnings)
+
+# utilities
+include(ccache)
+if({{ '%s_IS_MASTER_PROJECT' | format(__project_name | upper) }})
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        include(clang-tidy)
+        include(cppcheck)
+    endif()
+
+{% if format is defined %}
+    # format
+    set(CLANG_FORMAT_EXCLUDE_PATTERNS "docs/" "external/" "${PROJECT_BINARY_DIR}" ${CLANG_FORMAT_EXCLUDE_PATTERNS})
+    include(clang-format)
+{% endif %}
+endif()
+
 
 # build
 {% if project['attributes']['header_only'] -%}
@@ -112,8 +109,8 @@ add_subdirectory(src)
 
 {#
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to {{ '${%s}_BINARY_DIR}/install' | format(__project_name | upper) }}")
-    set(CMAKE_INSTALL_PREFIX "{{ '${%s}_BINARY_DIR}/install' | format(__project_name | upper) }}" CACHE STRING "The path to use for install" FORCE)
+    message(STATUS "Setting default CMAKE_INSTALL_PREFIX path to '${PROJECT_BINARY_DIR}/install'")
+    set(CMAKE_INSTALL_PREFIX '${PROJECT_BINARY_DIR}/install' CACHE STRING "The path to use for install" FORCE)
 endif()
 -#}
 

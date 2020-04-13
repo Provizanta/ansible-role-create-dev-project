@@ -17,7 +17,7 @@
 # the License.
 
 # USAGE: To enable any code coverage instrumentation/targets, the single CMake
-# option of `${PROJECT_NAME_UPPER}_ALLOW_CODE_COVERAGE` needs to be set to 'ON', either by GUI, ccmake, or
+# option of `ALLOW_CODE_COVERAGE` needs to be set to 'ON', either by GUI, ccmake, or
 # on the command line.
 #
 # From this point, there are two primary methods for adding instrumentation to
@@ -77,9 +77,7 @@
 # ~~~
 
 # Options
-option(${PROJECT_NAME_UPPER}_ALLOW_CODE_COVERAGE
-    "Builds targets with code coverage instrumentation. (Requires GCC or Clang)"
-    OFF)
+option(ALLOW_CODE_COVERAGE "Build targets with code coverage instrumentation." OFF)
 
 # Programs
 find_program(LLVM_COV_PATH "llvm-cov")
@@ -94,10 +92,10 @@ mark_as_advanced(FORCE
     GENHTML_PATH
 )
 
-set(CMAKE_COVERAGE_OUTPUT_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/ccov)
+set(CMAKE_COVERAGE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/ccov)
 
 # Common initialization/checks
-if(${PROJECT_NAME_UPPER}_ALLOW_CODE_COVERAGE AND NOT CODE_COVERAGE_ADDED)
+if(ALLOW_CODE_COVERAGE AND NOT CODE_COVERAGE_ADDED)
   set(CODE_COVERAGE_ADDED ON)
 
   # Common Targets
@@ -168,8 +166,9 @@ if(${PROJECT_NAME_UPPER}_ALLOW_CODE_COVERAGE AND NOT CODE_COVERAGE_ADDED)
     endif()
 
     # Targets
-    add_custom_target(ccov-clean COMMAND ${LCOV_PATH} --directory
-                                         ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR} --zerocounters)
+    add_custom_target(ccov-clean
+        COMMAND ${LCOV_PATH} --directory
+        ${PROJECT_BINARY_DIR} --zerocounters)
 
   else()
     message(FATAL_ERROR "Code coverage requires Clang or GCC. Aborting.")
@@ -219,7 +218,7 @@ function(target_code_coverage TARGET_NAME)
     set(target_code_coverage_COVERAGE_TARGET_NAME ${TARGET_NAME})
   endif()
 
-  if(${PROJECT_NAME_UPPER}_ALLOW_CODE_COVERAGE)
+  if(ALLOW_CODE_COVERAGE)
 
     # Add code coverage instrumentation to the target's linker command
     if(CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang"
@@ -373,10 +372,10 @@ function(target_code_coverage TARGET_NAME)
         add_custom_target(
           ccov-capture-${target_code_coverage_COVERAGE_TARGET_NAME}
           COMMAND ${CMAKE_COMMAND} -E remove ${COVERAGE_INFO}
-          COMMAND ${LCOV_PATH} --directory ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR} --zerocounters
+          COMMAND ${LCOV_PATH} --directory ${PROJECT_BINARY_DIR} --zerocounters
           COMMAND $<TARGET_FILE:${TARGET_NAME}> ${target_code_coverage_ARGS}
           COMMAND
-            ${LCOV_PATH} --directory ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR} --base-directory
+            ${LCOV_PATH} --directory ${PROJECT_BINARY_DIR} --base-directory
             ${CMAKE_SOURCE_DIR} --capture ${EXTERNAL_OPTION} --output-file
             ${COVERAGE_INFO}
           COMMAND ${EXCLUDE_COMMAND}
@@ -462,17 +461,16 @@ function(add_code_coverage_all_targets)
   cmake_parse_arguments(add_code_coverage_all_targets "" ""
                         "${multi_value_keywords}" ${ARGN})
 
-  if(${PROJECT_NAME_UPPER}_ALLOW_CODE_COVERAGE)
+  if(ALLOW_CODE_COVERAGE)
     if(CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang"
        OR CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
 
       # Merge the profile data for all of the run executables
-      add_custom_target(
-        ccov-all-processing
-        COMMAND
-          ${LLVM_PROFDATA_PATH} merge -o
-          ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata -sparse `cat
-          ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/profraw.list`)
+      add_custom_target(-all-processing
+          COMMAND
+              ${LLVM_PROFDATA_PATH} merge -o
+              ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata -sparse `cat
+              ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/profraw.list`)
 
       # Regex exclude only available for LLVM >= 7
       if(LLVM_COV_VERSION VERSION_GREATER_EQUAL "7.0.0")
@@ -492,10 +490,8 @@ function(add_code_coverage_all_targets)
           ${EXCLUDE_REGEX}
         DEPENDS ccov-all-processing)
 
-      # Export coverage information so continuous integration tools (e.g.
-      # Jenkins) can consume it
-      add_custom_target(
-        ccov-all-export
+      # Export coverage information so continuous integration tools can consume it
+      add_custom_target(-all-export
         COMMAND
           ${LLVM_COV_PATH} export `cat
           ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/binaries.list`
@@ -540,7 +536,7 @@ function(add_code_coverage_all_targets)
       add_custom_target(
         ccov-all-capture
         COMMAND ${CMAKE_COMMAND} -E remove ${COVERAGE_INFO}
-        COMMAND ${LCOV_PATH} --directory ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR} --capture
+        COMMAND ${LCOV_PATH} --directory ${PROJECT_BINARY_DIR} --capture
                 --output-file ${COVERAGE_INFO}
         COMMAND ${EXCLUDE_COMMAND}
         DEPENDS ccov-all-processing)

@@ -2,20 +2,15 @@
 
 find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
 
-option(${PROJECT_NAME_UPPERCASE}_DOCS_BUILD "Build project documentation using Doxygen." ${DOXYGEN_FOUND})
-option(${PROJECT_NAME_UPPERCASE}_DOCS_INSTALL "Install the entire project documentation." ${PROJECT_NAME_UPPERCASE}_DOCS_BUILD)
+option(DOCS_BUILD "Build project documentation using Doxygen." ${DOXYGEN_FOUND})
+option(DOCS_INSTALL "Install the entire project documentation." DOCS_BUILD)
 
-mark_as_advanced(
-    ${PROJECT_NAME_UPPERCASE}_DOCS_BUILD
-    ${PROJECT_NAME_UPPERCASE}_DOCS_INSTALL
-)
-
-if(${PROJECT_NAME_UPPERCASE}_DOCS_BUILD)
+if(DOCS_BUILD)
     if(DOXYGEN_FOUND)
         # file(GLOB_RECURSE THIS_PROJECT_PUBLIC_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
         message(STATUS "Found Doxygen: use target 'docs-doxygen' to build doxygen documentation")
 
-        set(DOXYGEN_OUTPUT_DIRECTORY ${${PROJECT_NAME_UPPERCASE}_BINARY_DIR}/doxygen)
+        set(DOXYGEN_OUTPUT_DIRECTORY ${BINARY_DIR}/doxygen)
         doxygen_add_docs("docs-doxygen"
             ${PROJECT_SOURCE_DIR}/src/
             ${PROJECT_SOURCE_DIR}/include/
@@ -50,10 +45,15 @@ if(${PROJECT_NAME_UPPERCASE}_DOCS_BUILD)
         message(STATUS "Use target 'docs' to generate the entire project documentation")
     endif()
 
-    if(${PROJECT_NAME_UPPERCASE}_DOCS_INSTALL)
+    if(DOCS_INSTALL)
         install(DIRECTORY ${PROJECT_SOURCE_DIR}/docs
             DESTINATION share/${PROJECT_NAME}
             PATTERN CMakeLists.txt EXCLUDE
         )
     endif()
 endif()
+
+mark_as_advanced(
+    DOCS_BUILD
+    DOCS_INSTALL
+)

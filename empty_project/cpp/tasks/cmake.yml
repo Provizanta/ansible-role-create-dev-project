@@ -52,7 +52,7 @@
     src: "cmake/optional_modules/{{ item['file'] }}"
     dest: "{{ project_root_path }}/cmake/modules/{{ (item['file'] | basename | splitext)[0] }}"
   loop:
-    - file: "FindClangFormat.cmake.j2"
+    - file: "clang-format.cmake.j2"
       use: "{{ format['clang'] is defined }}"
 
 - name: establish CMake script files
@@ -93,8 +93,8 @@
       #ifndef __VERSION_H__
       #define __VERSION_H__
 
-      // version variable that will be substituted by cmake
-      const char* version = "${${PROJECT_NAME_UPPERCASE}_VERSION}";
+      // version variable substituted by CMake
+      const char* version = "{{ '${%s_VERSION}' | format(__project_name | upper) }}";
 
       #endif	// __VERSION_H__
     dest: "{{ project_root_path }}/version.h.in"
