@@ -40,12 +40,7 @@ project("{{ __project_name }}"
     {%- endif %}
 )
 
-# set default build type
-if(NOT CMAKE_BUILD_TYPE)       # AND NOT CMAKE_CONFIGURATION_TYPES
-    message(STATUS "Setting build type to 'Release' as none was specified.")
-    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
+include(DefineBuildTypes)
 
 # determine, whether project is built as a subproject or as a main project
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)

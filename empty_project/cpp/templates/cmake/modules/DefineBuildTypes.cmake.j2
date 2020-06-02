@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+
+if(CMAKE_CONFIGURATION_TYPE)
+    if(NOT "Profile" IN_LIST CMAKE_CONFIGURATION_TYPE)
+        list(APPEND CMAKE_CONFIGURATION_TYPES Profile)
+    endif()
+
+    # set flags for the profile
+
+    set(ALLOWABLE_BUILD_TYPES "Debug" "Release" "RelWithDebInfo" "MinSizeRel" "Profile")
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY
+        STRINGS ${ALLOWABLE_BUILD_TYPES}
+    )
+
+    set(CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -p" CACHE STRING "")
+    set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -p" CACHE STRING "")
+    set(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -p" CACHE STRING "")
+    set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -p" CACHE STRING "")
+    set(CMAKE_STATIC_LINKER_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -p" CACHE STRING "")
+    set(CMAKE_MODULE_LINKER_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELWITHDEBINFO} -p" CACHE STRING "")
+
+    set(CMAKE_PROFILE_POSTFIX _profile)
+
+    # warning, not sufficient
+    if(NOT CMAKE_BUILD_TYPE)
+        message(STATUS "Setting build type to 'Release' as none was specified.")
+        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the build type." FORCE)
+    elseif(NOT CMAKE_BUILD_TYPE IN_LIST ALLOWABLE_BUILD_TYPES)
+        message(FATAL_ERROR "Invalid build type: '${CMAKE_BUILD_TYPE}'")
+    endif()
+endif()
