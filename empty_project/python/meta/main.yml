@@ -2,6 +2,7 @@
 
 galaxy_info:
   author: Tibor Csóka
+  namespace: provizanta
   description: |
     Create a python project.
 
